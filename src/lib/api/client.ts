@@ -96,8 +96,21 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     try { envelope = (await response.json()) as ApiEnvelope<T>; }
     catch { throw new ApiError('Backend returned invalid JSON.', response.status, 'INVALID_API_RESPONSE'); }
     if (!response.ok || envelope?.ok !== true || envelope.data === undefined) {
+      // Disabled Backend feature flags produce 404 NOT_FOUND by design.
+      // Distinguish that common deployment issue from a random failed API call.
+      const disabledFeatureHint = response.status === 404 && envelope?.error?.code === 'NOT_FOUND'
+        ? (path.startsWith('/auth/') || path.startsWith('/users/')
+            ? 'Player accounts are unavailable on this backend. Check B2C_AUTH_ENABLED and the deployed API URL.'
+            : path.startsWith('/leaderboards/')
+              ? 'Leaderboard is unavailable on this backend. Check LEADERBOARD_ENABLED and the deployed API URL.'
+              : path.startsWith('/operator/')
+                ? 'Operator accounts are unavailable on this backend. Check B2B_OPERATOR_AUTH_ENABLED and the deployed API URL.'
+                : path.startsWith('/admin/')
+                  ? 'Admin access is unavailable on this backend. Check SUPER_ADMIN_ENABLED and the deployed API URL.'
+                  : null)
+        : null;
       throw new ApiError(
-        envelope?.error?.message || `API request failed (HTTP ${response.status})`,
+        disabledFeatureHint || envelope?.error?.message || `API request failed (HTTP ${response.status})`,
         response.status,
         envelope?.error?.code || 'API_REQUEST_FAILED',
         envelope?.requestId,
