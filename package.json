@@ -19,6 +19,7 @@
     "test:admin": "node --test tests/patch10-admin.test.mjs",
     "test:release": "node --experimental-strip-types --test tests/patch12-release.test.mjs",
     "test:netlify": "node --test tests/patch14-netlify.test.mjs",
+    "test:game-icons": "node --experimental-strip-types --test tests/patch15-game-icons.test.mjs",
     "preflight:netlify": "node tools/patch14-ensure-netlify-redirects.mjs && node tools/patch14-netlify-preflight.mjs",
     "netlify:fix": "node tools/patch14-ensure-netlify-redirects.mjs"
   },

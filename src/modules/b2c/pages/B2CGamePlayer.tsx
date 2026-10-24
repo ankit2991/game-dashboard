@@ -67,7 +67,7 @@ export const B2CGamePlayer: React.FC = () => {
       <CatalogStatus loading={loading} error={error} empty={!games.length && !loading && !error} retry={refresh}/>
       {!loading && !error && games.length > 0 && !game && <div role="alert" className="p-8 bg-[#121A2D] border border-[#233252] rounded-2xl text-[#98A5BF]">This game is not in the enabled provider catalog. <Link to="/games" className="text-[#00D4FF] underline">Browse games</Link>.</div>}
       {!loading && !error && game && art && <div className="rounded-3xl bg-[#121A2D] border border-[#233252] overflow-hidden">
-        <div className="p-8 sm:p-12 flex items-center justify-center relative min-h-52" style={{ background: `radial-gradient(circle at center, ${art.accent}40, #121A2D 70%)` }}><span className="text-8xl font-black" style={{ color: art.accent }} aria-hidden="true">{art.symbol}</span></div>
+        <div className="p-8 sm:p-12 flex items-center justify-center relative min-h-52" style={{ background: `radial-gradient(circle at center, ${art.accent}40, #121A2D 70%)` }}><img src={art.icon ?? undefined} alt={`${game.name} icon`} className="h-52 w-52 sm:h-64 sm:w-64 object-contain drop-shadow-2xl" /></div>
         <div className="p-6 sm:p-10 space-y-5">
           <div className="flex flex-wrap gap-3 items-center"><Badge variant="cyan">{art.genre}</Badge><Badge variant={game.providerLaunchAvailable ? 'success' : 'neutral'}>{game.providerLaunchAvailable ? 'Provider adapter enabled' : 'Demo only / Provider not configured'}</Badge></div>
           <h1 className="text-3xl font-black font-display text-white">{game.name}</h1>

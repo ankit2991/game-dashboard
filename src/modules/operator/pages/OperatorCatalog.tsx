@@ -36,7 +36,7 @@ export const OperatorCatalog: React.FC = () => {
     <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">{filtered.map(game => {
       const chosen = selectedGames.includes(game.gameId), art = getCatalogArtwork(game.gameId);
       return <Card key={game.gameId} className="flex flex-col gap-3">
-        <div className="h-28 rounded-xl flex items-center justify-center bg-[#0B1020]" style={{color: art.accent}}><span className="text-5xl font-black">{art.symbol}</span></div>
+        <div className="h-28 rounded-xl flex items-center justify-center bg-[#0B1020]" style={{color: art.accent}}><img src={art.icon ?? undefined} alt={`${game.name} icon`} className="h-full w-full object-contain p-2" loading="lazy" /></div>
         <div><h2 className="text-white font-semibold">{game.name}</h2><p className="text-[#98A5BF] text-xs font-mono">{game.gameId} · {game.gameMode.replace('_',' ')}</p></div>
         <p className="text-[#98A5BF] text-xs">{game.providerLaunchAvailable ? 'Adapter marked configured; wallet readiness must be verified.' : 'Catalog listed; provider adapter not connected.'}</p>
         <Button variant={chosen ? 'outline' : 'cyan'} size="sm" disabled={saving || loading} onClick={() => void toggle(game.gameId)} leftIcon={chosen ? <Check className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}>{chosen ? 'Remove selection' : 'Select game'}</Button>

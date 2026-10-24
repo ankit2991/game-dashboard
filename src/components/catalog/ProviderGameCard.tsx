@@ -13,7 +13,7 @@ export const ProviderGameCard: React.FC<{ game: ProviderGame }> = ({ game }) => 
       <Link to={`/play/${encodeURIComponent(game.gameId)}`} className="block focus-visible:outline-2 focus-visible:outline-[#00D4FF]" aria-label={`Details for ${game.name}`}>
         <div className="aspect-[16/10] relative flex items-center justify-center overflow-hidden" style={{ background: `radial-gradient(circle at 30% 30%, ${art.accent}55, #121A2D 70%)` }}>
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(35deg, transparent 48%, #ffffff28 49%, transparent 51%)', backgroundSize: '20px 20px' }} />
-          <span className="text-6xl font-black select-none" style={{ color: art.accent }} aria-hidden="true">{art.symbol}</span>
+          <img src={art.icon ?? undefined} alt={`${game.name} icon`} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-200" loading="lazy" decoding="async" />
           <span className="absolute top-3 left-3 px-2 py-1 text-[10px] uppercase font-bold rounded-md bg-[#0B1020]/85 text-white">{art.genre}</span>
           <span className="absolute right-3 top-3"><Badge variant={game.providerLaunchAvailable ? 'success' : 'neutral'} size="sm">{game.providerLaunchAvailable ? 'Provider configured' : 'Catalog listed'}</Badge></span>
         </div>

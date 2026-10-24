@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { useProviderCatalog } from '../../../lib/catalog/useProviderCatalog';
+import { getCatalogArtwork } from '../../../lib/catalog/catalogModel';
 import type { PlayerProfile } from '../../../lib/api/player';
 
 function memberSince(value: string | undefined) {
@@ -115,7 +116,7 @@ export const PlayerOverview: React.FC = () => {
             : catalog.games.length === 0 ? <p className="text-sm text-[#98A5BF]">No games are currently available.</p>
             : <div className="space-y-2">{catalog.games.slice(0, 4).map(game => (
               <Link to={`/play/${game.gameId}`} key={game.gameId} className="flex justify-between items-center gap-2 p-3 rounded-xl border border-[#233252] hover:border-[#7C5CFC] bg-[#121A2D]">
-                <span className="font-semibold text-white text-sm">{game.name}</span><Play className="w-4 h-4 text-[#00D4FF]" />
+                <span className="flex items-center gap-3 min-w-0"><img src={getCatalogArtwork(game.gameId).icon ?? undefined} alt={`${game.name} icon`} className="w-10 h-10 object-contain rounded-lg bg-[#0B1020] shrink-0" loading="lazy" /><span className="font-semibold text-white text-sm">{game.name}</span></span><Play className="w-4 h-4 text-[#00D4FF]" />
               </Link>
             ))}</div>}
         </Card>

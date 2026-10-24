@@ -5,6 +5,7 @@ import {Badge} from '../../../components/ui/Badge';
 import {Button} from '../../../components/ui/Button';
 import {adminApi} from '../../../lib/api/admin';
 import {useAdminPortalData} from '../../../lib/api/useAdminPortalData';
+import {getCatalogArtwork} from '../../../lib/catalog/catalogModel';
 
 /** Catalog flags are environment-owned. UI never claims to save local-only toggles. */
 export const GameManagement: React.FC = () => {
@@ -33,7 +34,7 @@ export const GameManagement: React.FC = () => {
     </div><div className="overflow-x-auto"><table className="w-full text-left text-xs text-[#98A5BF]">
       <thead><tr className="border-b border-[#233252]"><th className="p-3">Game</th><th className="p-3">Mode</th><th className="p-3">Catalog</th><th className="p-3">Launch Configuration</th><th className="p-3">Demo URL</th></tr></thead>
       <tbody>{shown.map(g => <tr key={g.gameId} className="border-b border-[#233252]/60">
-        <td className="p-3"><strong className="text-white">{g.name}</strong><div className="font-mono text-[11px]">{g.gameId}</div></td>
+        <td className="p-3"><div className="flex items-center gap-2"><img src={getCatalogArtwork(g.gameId).icon ?? undefined} alt={`${g.name} icon`} className="w-10 h-10 object-contain rounded-lg bg-[#0B1020] shrink-0" loading="lazy"/><div><strong className="text-white">{g.name}</strong><div className="font-mono text-[11px]">{g.gameId}</div></div></div></td>
         <td className="p-3">{g.gameMode.replace('_',' ')}</td>
         <td className="p-3"><Badge variant={g.enabled?'success':'danger'}>{g.enabled?'Enabled':'Disabled'}</Badge></td>
         <td className="p-3">{g.providerLaunchAvailable ? 'Adapter configured (not verified live)' : 'Not connected'}</td>

@@ -1,17 +1,17 @@
 import type { ProviderGame } from '../api/types';
 
 /** Display-only art and genre labels, never game availability or financial claims. */
-export const catalogArtwork: Record<string, { genre: string; blurb: string; accent: string; symbol: string }> = {
-  pinball: { genre: 'Arcade', blurb: 'Classic physics-based pinball action.', accent: '#7C5CFC', symbol: '◉' },
-  'whack-a-mole': { genre: 'Arcade', blurb: 'Fast reactions and timed targets.', accent: '#FFB547', symbol: '✦' },
-  galaga: { genre: 'Shooter', blurb: 'Arcade-inspired space shooting.', accent: '#00D4FF', symbol: '✧' },
-  'liars-dice': { genre: 'Dice', blurb: 'Bluffing and dice-based multiplayer.', accent: '#20C997', symbol: '⚄' },
-  'ship-captain-crew': { genre: 'Dice', blurb: 'A multiplayer dice challenge.', accent: '#A885FF', symbol: '⚓' },
-  bomberboy: { genre: 'Arcade', blurb: 'Navigate danger in an arcade-style challenge.', accent: '#FF5D73', symbol: '✹' },
-  'tower-rush': { genre: 'Skill', blurb: 'Stack platforms with precision and timing.', accent: '#F59E0B', symbol: '▥' },
+export const catalogArtwork: Record<string, { genre: string; blurb: string; accent: string; symbol: string; icon: string | null }> = {
+  pinball: { genre: 'Arcade', blurb: 'Classic physics-based pinball action.', accent: '#7C5CFC', symbol: '◉', icon: '/game-icons/pinball.png' },
+  'whack-a-mole': { genre: 'Arcade', blurb: 'Fast reactions and timed targets.', accent: '#FFB547', symbol: '✦', icon: '/game-icons/whack-a-mole.png' },
+  galaga: { genre: 'Shooter', blurb: 'Arcade-inspired space shooting.', accent: '#00D4FF', symbol: '✧', icon: '/game-icons/galaga.png' },
+  'liars-dice': { genre: 'Dice', blurb: 'Bluffing and dice-based multiplayer.', accent: '#20C997', symbol: '⚄', icon: '/game-icons/liars-dice.png' },
+  'ship-captain-crew': { genre: 'Dice', blurb: 'A multiplayer dice challenge.', accent: '#A885FF', symbol: '⚓', icon: '/game-icons/ship-captain-crew.png' },
+  bomberboy: { genre: 'Arcade', blurb: 'Navigate danger in an arcade-style challenge.', accent: '#FF5D73', symbol: '✹', icon: '/game-icons/bomberboy.png' },
+  'tower-rush': { genre: 'Skill', blurb: 'Stack platforms with precision and timing.', accent: '#F59E0B', symbol: '▥', icon: '/game-icons/tower-rush.png' },
 };
 
-const fallbackArtwork = { genre: 'Game', blurb: 'Explore this game in the provider catalog.', accent: '#00D4FF', symbol: '◆' };
+const fallbackArtwork = { genre: 'Game', blurb: 'Explore this game in the provider catalog.', accent: '#00D4FF', symbol: '◆', icon: null };
 export function getCatalogArtwork(gameId: string) {
   return Object.prototype.hasOwnProperty.call(catalogArtwork, gameId) ? catalogArtwork[gameId] : fallbackArtwork;
 }
