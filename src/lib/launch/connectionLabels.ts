@@ -13,6 +13,7 @@ const HINTS: Record<string, string> = {
   OPERATOR_ACCESS_NOT_CONFIGURED: 'The B2C partner is missing or is not authorized for this game.',
   ADAPTER_NOT_CONFIGURED: 'Game adapter secret or per-game launch flag is missing.',
   GAME_BACKEND_NOT_CONFIGURED: 'The game backend URL is not configured.',
+  SANDBOX_WALLET_READ_ONLY: 'Patch 1 internal COIN wallet supports verified balance reads only. Game Bet / Win / Refund remains disabled until Patch 3.',
   SANDBOX_WALLET_NOT_CONFIGURED: 'Wallet writes or partner wallet are not configured.',
   PILOT_GAME_NOT_ALLOWED: 'The game is excluded by the pilot allowlist.',
   GAME_NOT_IN_SANDBOX_PILOT: 'This game is not enrolled in the sandbox pilot.',

@@ -25,6 +25,7 @@ export interface AdminIntegrationReport {
   scope: 'configuration_only'; liveMoneySupported: false;
   wallet: {configurationReady: boolean; remoteBalanceVerified: false; blockers: string[]; walletWritesEnabled: boolean; balanceProvider?: 'provider_sandbox' | 'operator_sandbox_or_unavailable'};
   games: {gameId: string; name: string; catalogEnabled: boolean; providerConfigurationReady: boolean;
+    adapterKeyConfigured?: boolean; gameBackendUrlConfigured?: boolean; adapterHandshakeVerified?: false; gameBackendReachableVerified?: false;
     browserGameWalletE2eVerified: false; status: 'configuration_blocked' | 'awaiting_game_backend_e2e'; blockers: string[]}[];
 }
 export interface AdminSettings {

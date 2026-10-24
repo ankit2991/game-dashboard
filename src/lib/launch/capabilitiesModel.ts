@@ -4,6 +4,8 @@ export interface LaunchCapability {
   demoAvailable: boolean;
   providerHandoffConfigured: boolean;
   gameBackendConfigured: boolean;
+  adapterKeyConfigured?: boolean;
+  adapterHandshakeVerified?: false;
   pinballSandboxPilotConfigured?: boolean;
   sandboxPilotConfigured?: boolean;
   browserE2eVerified: false;
@@ -27,6 +29,8 @@ export function validateLaunchCapabilities(value: unknown): LaunchCapabilitiesRe
     if (typeof game.gameId !== 'string' || !/^[a-z0-9-]{2,64}$/.test(game.gameId) || seen.has(game.gameId) ||
         typeof game.demoAvailable !== 'boolean' || typeof game.providerHandoffConfigured !== 'boolean' ||
         typeof game.gameBackendConfigured !== 'boolean' ||
+        (game.adapterKeyConfigured !== undefined && typeof game.adapterKeyConfigured !== 'boolean') ||
+        (game.adapterHandshakeVerified !== undefined && game.adapterHandshakeVerified !== false) ||
         (game.pinballSandboxPilotConfigured !== undefined && typeof game.pinballSandboxPilotConfigured !== 'boolean') ||
         (game.sandboxPilotConfigured !== undefined && typeof game.sandboxPilotConfigured !== 'boolean') ||
         game.browserE2eVerified !== false ||
