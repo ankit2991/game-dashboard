@@ -16,10 +16,14 @@ import {
 } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { useAuth } from '../context/AuthContext';
+import { usePlayerWallet } from '../lib/wallet/usePlayerWallet';
+import { verifiedCoinBalanceLabel } from '../lib/wallet/walletModel';
 
 export const PlayerDashboardLayout: React.FC = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { wallet: verifiedWallet, loading: walletLoading } = usePlayerWallet({ refreshOnResume: true });
+  const balanceLabel = verifiedCoinBalanceLabel(verifiedWallet, walletLoading);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -172,7 +176,7 @@ export const PlayerDashboardLayout: React.FC = () => {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#182238] border border-[#2D3E66] text-xs font-mono font-bold text-[#00D4FF]"
               >
                 <Wallet className="w-3.5 h-3.5 text-[#20C997]" />
-                <span>Balance unavailable</span>
+                <span>{balanceLabel}</span>
               </Link>
 
               <Link

@@ -54,6 +54,15 @@ export function transactionPaging(offset: number) {
   }
   return { limit: TRANSACTION_PAGE_SIZE, offset };
 }
+/** The header must display only the backend-verified sandbox balance, never a profile/demo value. */
+export function verifiedCoinBalanceLabel(wallet: WalletOverview | null, loading = false): string {
+  if (loading) return 'Checking…';
+  if (wallet?.balanceStatus !== 'verified' || wallet.currency !== 'COIN' ||
+      wallet.decimals !== 0 || !Number.isSafeInteger(wallet.balanceMinor) ||
+      wallet.balanceMinor === null || wallet.balanceMinor < 0) return 'Unavailable';
+  return `${wallet.balanceMinor.toLocaleString('en-US')} COIN`;
+}
+
 export function amountLabel(amountMinor: number, currency: string) {
   // We do not have an API contract for decimal places per historical currency.
   // Print canonical minor units instead of incorrectly treating COIN or MYR as cents.

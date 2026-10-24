@@ -11,7 +11,8 @@
     "preflight:netlify": "node tools/patch14-ensure-netlify-redirects.mjs && node tools/patch14-netlify-preflight.mjs",
     "netlify:fix": "node tools/patch14-ensure-netlify-redirects.mjs",
     "test:patch1": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs",
-    "test:patch2": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs tests/patch2-launch-contract.test.mjs"
+    "test:patch2": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs tests/patch2-launch-contract.test.mjs",
+    "test:patch3": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs tests/patch2-launch-contract.test.mjs tests/patch2-3-header-binding.test.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",

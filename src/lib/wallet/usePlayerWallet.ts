@@ -5,7 +5,7 @@ import { TRANSACTION_PAGE_SIZE, type PlayerTransactionPage, type WalletOverview,
   DEFAULT_TRANSACTION_FILTERS, type TransactionFilters } from './walletModel';
 
 /** Data is never persisted in localStorage; logout or account changes clear the view. */
-export function usePlayerWallet() {
+export function usePlayerWallet({ refreshOnResume = false }: { refreshOnResume?: boolean } = {}) {
   const { user, getPlayerAccessToken } = useAuth();
   const userId = user?.role === 'player' ? user.id : null;
   const [walletState, setWalletState] = useState<{ userId: string; value: WalletOverview } | null>(null);
@@ -13,6 +13,25 @@ export function usePlayerWallet() {
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => setRevision(v => v + 1), []);
+  // The player can finish a Provider game in another tab/window; refresh on return.
+  // Never cache balance in browser storage, and avoid duplicate focus/visibility requests.
+  useEffect(() => {
+    if (!refreshOnResume || !userId) return;
+    let lastCheck = Date.now();
+    const onReturn = () => {
+      if (document.visibilityState !== 'visible' || Date.now() - lastCheck < 3000) return;
+      lastCheck = Date.now();
+      refresh();
+    };
+    window.addEventListener('focus', onReturn);
+    document.addEventListener('visibilitychange', onReturn);
+    window.addEventListener('pageshow', onReturn);
+    return () => {
+      window.removeEventListener('focus', onReturn);
+      document.removeEventListener('visibilitychange', onReturn);
+      window.removeEventListener('pageshow', onReturn);
+    };
+  }, [refreshOnResume, userId, refresh]);
   useEffect(() => {
     let active = true;
     const aborter = new AbortController();

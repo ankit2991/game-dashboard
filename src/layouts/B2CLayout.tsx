@@ -20,6 +20,8 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { usePlayerWallet } from '../lib/wallet/usePlayerWallet';
+import { verifiedCoinBalanceLabel } from '../lib/wallet/walletModel';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
@@ -28,6 +30,8 @@ export const B2CLayout: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const isPlayer = isAuthenticated && user?.role === 'player';
+  const { wallet: verifiedWallet, loading: walletLoading } = usePlayerWallet({ refreshOnResume: true });
+  const balanceLabel = verifiedCoinBalanceLabel(verifiedWallet, isPlayer && walletLoading);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -130,7 +134,7 @@ export const B2CLayout: React.FC = () => {
                   title="View Player Wallet"
                 >
                   <Wallet className="w-3.5 h-3.5 text-[#20C997] flex-shrink-0" />
-                  <span className="text-[11px] text-[#00D4FF]">—</span>
+                  <span className="text-[11px] text-[#00D4FF]">{balanceLabel}</span>
                 </Link>
 
                 {/* Mobile Wallet Shortcut (Visible on < sm) */}
@@ -156,7 +160,7 @@ export const B2CLayout: React.FC = () => {
                     <div className="flex flex-col text-left justify-center">
                       <span className="text-[9px] text-[#98A5BF] uppercase tracking-wider font-semibold leading-none">Balance</span>
                       <span className="font-mono font-bold text-xs text-white group-hover:text-[#00D4FF] mt-0.5 leading-none">
-                        Unavailable
+                        {balanceLabel}
                       </span>
                     </div>
                   </Link>
@@ -321,7 +325,7 @@ export const B2CLayout: React.FC = () => {
                   <div>
                     <span className="text-[10px] text-[#98A5BF] block leading-none">Verified Balance</span>
                     <span className="text-xs font-mono font-bold text-white leading-none mt-1 block">
-                      Unavailable
+                      {balanceLabel}
                     </span>
                   </div>
                 </div>
