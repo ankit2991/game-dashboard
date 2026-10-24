@@ -1,274 +1,51 @@
-import React, { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
-import {
-  Gamepad2,
-  CheckCircle,
-  Zap,
-  CheckCircle2,
-  AlertTriangle,
-  KeyRound,
-  Coins,
-  Layers,
-  ArrowUpRight,
-  TrendingUp,
-  Download,
-  ExternalLink,
-  Code2,
-  Play,
-  Terminal,
-  Server
-} from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Gamepad2, KeyRound, Users, Webhook, ArrowLeftRight, RefreshCw } from 'lucide-react';
 import { Card, CardHeader } from '../../../components/ui/Card';
-import { StatCard } from '../../../components/ui/StatCard';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
-import { mockGames, mockProviders } from '../../../data/mock/gamesData';
-import { mockChartApiTraffic, mockChartProviderShare } from '../../../data/mock/adminData';
+import { operatorOperationsApi } from '../../../lib/api/operator';
+import { useOperatorOperations } from '../../../lib/operator/useOperatorOperations';
 
 export const OperatorDashboard: React.FC = () => {
-  const context = useOutletContext<{ environment: 'sandbox' | 'production' }>();
-  const isSandbox = context?.environment === 'sandbox';
-
-  return (
-    <div className="space-y-6">
-      {/* Top Welcome Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#233252]/60">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold font-display text-white tracking-tight">
-              Asia Gaming Network Ltd
-            </h1>
-            <Badge variant={isSandbox ? 'cyan' : 'success'} size="sm" dot>
-              {isSandbox ? 'Sandbox Mode' : 'Production Live'}
-            </Badge>
-          </div>
-          <p className="text-xs text-[#98A5BF] mt-1">
-            Aggregator Portal • Account ID: <code className="text-[#00D4FF] font-mono">op_asia_gaming</code> • Protocol: Seamless Wallet v2
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link to="/operator/docs">
-            <Button variant="outline" size="sm" leftIcon={<Code2 className="w-3.5 h-3.5 text-[#00D4FF]" />}>
-              API Reference
-            </Button>
-          </Link>
-          <Link to="/operator/catalog">
-            <Button variant="cyan" size="sm" leftIcon={<Gamepad2 className="w-3.5 h-3.5" />}>
-              Add Games from Marketplace
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* 8 Operator Summary KPI Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <div className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] lg:col-span-2">
-          <span className="text-[10px] text-[#64748B] uppercase font-semibold">Available Catalog</span>
-          <p className="text-xl font-bold text-white font-display mt-0.5">742</p>
-          <span className="text-[10px] text-[#98A5BF]">Global Studio Games</span>
-        </div>
-
-        <div className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] lg:col-span-2">
-          <span className="text-[10px] text-[#64748B] uppercase font-semibold">My Active Titles</span>
-          <p className="text-xl font-bold text-[#00D4FF] font-display mt-0.5">420</p>
-          <span className="text-[10px] text-[#20C997]">Integrated & Live</span>
-        </div>
-
-        <div className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] lg:col-span-2">
-          <span className="text-[10px] text-[#64748B] uppercase font-semibold">Monthly API Calls</span>
-          <p className="text-xl font-bold text-[#7C5CFC] font-display mt-0.5">42.9M</p>
-          <span className="text-[10px] text-[#98A5BF]">99.94% Success Rate</span>
-        </div>
-
-        <div className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] lg:col-span-2">
-          <span className="text-[10px] text-[#64748B] uppercase font-semibold">GGR Turnover (GMV)</span>
-          <p className="text-xl font-bold text-[#20C997] font-display mt-0.5">$18.45M</p>
-          <span className="text-[10px] text-[#20C997]">↑ 19.4% This Month</span>
-        </div>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Real-time API Traffic */}
-        <Card className="lg:col-span-2">
-          <CardHeader
-            title="Inbound Game Launch & Wallet Callbacks"
-            subtitle="Request throughput over 24 hours"
-            action={<Badge variant="cyan" size="sm" dot>Live WebSocket</Badge>}
-          />
-          <div className="h-64 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockChartApiTraffic} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="opColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#00D4FF" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#233252" opacity={0.6} />
-                <XAxis dataKey="time" stroke="#64748B" fontSize={11} />
-                <YAxis stroke="#64748B" fontSize={11} tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#121A2D',
-                    borderColor: '#2D3E66',
-                    borderRadius: '12px',
-                    color: '#fff',
-                  }}
-                />
-                <Area type="monotone" dataKey="requests" stroke="#00D4FF" strokeWidth={2.5} fillOpacity={1} fill="url(#opColor)" name="API Calls" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Studio Share Donut */}
-        <Card>
-          <CardHeader
-            title="Provider Volume Breakdown"
-            subtitle="Share of player sessions by studio"
-          />
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={mockChartProviderShare}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={70}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {mockChartProviderShare.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#121A2D',
-                    borderColor: '#2D3E66',
-                    borderRadius: '12px',
-                    color: '#fff',
-                    fontSize: '11px',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="space-y-1 pt-1 text-xs">
-            {mockChartProviderShare.slice(0, 3).map((item) => (
-              <div key={item.name} className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[#98A5BF]">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                  {item.name}
-                </span>
-                <span className="font-semibold text-white">{item.value}%</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      {/* Two Column Grid: Top Games for this Operator & Recent API Gateway Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Most Played Games on Operator White-Labels */}
-        <Card>
-          <CardHeader
-            title="Your Top Performing Games"
-            subtitle="Highest grossing titles distributed across your portals"
-            action={
-              <Link to="/operator/my-games" className="text-xs text-[#00D4FF] hover:underline font-semibold">
-                Manage Integrated (420) →
-              </Link>
-            }
-          />
-
-          <div className="space-y-2.5">
-            {mockGames.slice(0, 4).map((game) => (
-              <div
-                key={game.id}
-                className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] flex items-center justify-between gap-3"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <img
-                    src={game.thumbnail}
-                    alt={game.title}
-                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-[#2D3E66]"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-white text-xs truncate">{game.title}</p>
-                    <p className="text-[11px] text-[#98A5BF] truncate">{game.providerName} • RTP: {game.rtp}%</p>
-                  </div>
-                </div>
-
-                <Badge variant="success" size="sm">Active Live</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Integration Activity Feed */}
-        <Card>
-          <CardHeader
-            title="Recent API Handshakes & Callbacks"
-            subtitle="Real-time request log for session tokens"
-            action={
-              <Link to="/operator/logs" className="text-xs text-[#00D4FF] hover:underline font-semibold">
-                View Full Logs →
-              </Link>
-            }
-          />
-
-          <div className="space-y-2.5 text-xs">
-            <div className="p-2.5 rounded-xl bg-[#121A2D] border border-[#233252] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[#20C997] font-bold">200 OK</span>
-                <span className="text-white font-mono">POST /v1/games/launch</span>
-              </div>
-              <span className="text-[#98A5BF]">41ms • Just now</span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-[#121A2D] border border-[#233252] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[#20C997] font-bold">200 OK</span>
-                <span className="text-white font-mono">POST /v1/wallet/bet</span>
-              </div>
-              <span className="text-[#98A5BF]">36ms • 12s ago</span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-[#121A2D] border border-[#233252] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[#20C997] font-bold">200 OK</span>
-                <span className="text-white font-mono">POST /v1/wallet/win</span>
-              </div>
-              <span className="text-[#98A5BF]">39ms • 45s ago</span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-[#121A2D] border border-[#233252] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[#00D4FF] font-bold">200 OK</span>
-                <span className="text-white font-mono">GET /v1/catalog/games</span>
-              </div>
-              <span className="text-[#98A5BF]">58ms • 2m ago</span>
-            </div>
-          </div>
-        </Card>
-      </div>
+  const { data, error, loading, refresh } = useOperatorOperations(operatorOperationsApi.dashboard);
+  const metrics = [
+    { label: 'Available games', value: data?.availableGames, icon: Gamepad2 },
+    { label: 'My selected games', value: data?.selectedGames.length, icon: Gamepad2 },
+    { label: 'Authorized for partner', value: data?.authorizedGames.length, icon: KeyRound },
+    { label: 'Recorded sandbox transactions', value: data?.transactionsTotal, icon: ArrowLeftRight },
+    { label: 'Proposed team members', value: data?.teamDraftCount, icon: Users },
+  ];
+  return <div className="space-y-6">
+    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#233252] pb-4">
+      <div><h1 className="text-2xl font-bold text-white">{data?.account.companyName || 'Operator overview'}</h1>
+        <p className="text-xs text-[#98A5BF] mt-1">Account overview from the provider backend. Sandbox only; no production wallet or financial reporting.</p></div>
+      <div className="flex flex-wrap items-center gap-2"><Badge variant="cyan" size="sm">Sandbox only</Badge>
+        <Button variant="outline" size="sm" onClick={refresh} disabled={loading} leftIcon={<RefreshCw size={14}/>}>Refresh</Button></div>
     </div>
-  );
+    {error && <Card role="alert"><p className="text-[#FF5D73]">{error}</p><Button size="sm" variant="outline" onClick={refresh}>Retry</Button></Card>}
+    {loading && <p role="status" className="text-[#98A5BF]">Loading operator data from the backend…</p>}
+    {!error && <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+      {metrics.map(({label,value,icon:Icon}) => <Card key={label} className="min-w-0">
+        <div className="flex gap-2 items-center text-[#98A5BF] text-xs"><Icon size={15}/>{label}</div>
+        <p className="text-2xl font-bold text-white mt-2">{data ? value : '—'}</p></Card>)}
+    </div>}
+    {data && !error && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card><CardHeader title="Integration status" subtitle="Operator selection and partner permissions are separate"/>
+        <div className="space-y-3 text-sm">
+          <p className="text-white">Partner: <span className="text-[#98A5BF]">{data.partnerProvisioned ? data.partnerStatus : 'Not provisioned'}</span></p>
+          <p className="text-white">Webhook: <span className="text-[#98A5BF]">{data.webhookDraftConfigured ? 'Draft saved; delivery disabled' : 'No draft saved'}</span></p>
+          <p className="text-[#98A5BF] text-xs">Selecting a game does not activate its provider adapter or authorize its wallet. No production traffic or GGR analytics are available.</p>
+          <div className="flex flex-wrap gap-3 pt-2 text-xs text-[#00D4FF]"><Link to="/operator/catalog">Browse catalog →</Link><Link to="/operator/credentials">Credentials →</Link><Link to="/operator/webhooks"><Webhook className="inline w-3 h-3"/> Webhooks →</Link></div>
+        </div>
+      </Card>
+      <Card><CardHeader title="Recent wallet activity" subtitle="Last five recorded sandbox ledger events, not HTTP access logs" action={<Link to="/operator/logs" className="text-xs text-[#00D4FF]">Full activity →</Link>}/>
+        {data.recentActivity.length === 0 ? <p className="text-[#98A5BF] text-sm">No ledger transactions recorded for this operator.</p> :
+        <ul className="space-y-3">{data.recentActivity.map(x => <li key={x.id} className="flex justify-between gap-2 border-b border-[#233252] pb-2 text-xs">
+          <span className="text-white">{x.type} · {x.gameId} <span className="text-[#98A5BF]">({x.status})</span></span>
+          <time className="text-[#98A5BF]">{new Date(x.occurredAt).toLocaleString()}</time>
+        </li>)}</ul>}
+      </Card>
+    </div>}
+  </div>;
 };

@@ -6,6 +6,7 @@ import { CatalogStatus } from '../../../components/catalog/CatalogStatus';
 import { useProviderCatalog } from '../../../lib/catalog/useProviderCatalog';
 import { getCatalogArtwork, getSafeDemoUrl } from '../../../lib/catalog/catalogModel';
 import { launchApi, validateLaunchResponse, type BrowserGameLaunch, type LaunchMode } from '../../../lib/api/launch';
+import type { LaunchCapabilitiesResponse } from '../../../lib/launch/capabilitiesModel';
 import { useAuth } from '../../../context/AuthContext';
 
 /** Patch 4: a launch must be approved by the BE, not simulated in React. */
@@ -16,6 +17,11 @@ export const B2CGamePlayer: React.FC = () => {
   const game = games.find((entry) => entry.gameId === id);
   const art = game ? getCatalogArtwork(game.gameId) : null;
   const demo = game ? getSafeDemoUrl(game.demoUrl) : null;
+  const [capabilities, setCapabilities] = useState<LaunchCapabilitiesResponse | null>(null);
+  const [capabilityError, setCapabilityError] = useState<string | null>(null);
+  const [capabilityLoading, setCapabilityLoading] = useState(true);
+  const selectedCapability = capabilities?.games.find(entry => entry.gameId === id);
+  const providerConfigured = selectedCapability?.providerHandoffConfigured === true;
   const [pending, setPending] = useState<LaunchMode | null>(null);
   const [launch, setLaunch] = useState<BrowserGameLaunch | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
@@ -31,8 +37,20 @@ export const B2CGamePlayer: React.FC = () => {
     return () => { alive.current = false; request.current?.abort(); request.current = null; };
   }, [id]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    setCapabilities(null);
+    setCapabilityError(null);
+    setCapabilityLoading(true);
+    launchApi.capabilities(controller.signal)
+      .then(value => { if (!controller.signal.aborted) setCapabilities(value); })
+      .catch(cause => { if (!controller.signal.aborted) setCapabilityError(cause instanceof Error ? cause.message : 'Launch status unavailable.'); })
+      .finally(() => { if (!controller.signal.aborted) setCapabilityLoading(false); });
+    return () => controller.abort();
+  }, [id]);
+
   const startGame = async (mode: LaunchMode) => {
-    if (!game || pending) return;
+    if (!game || pending || (mode === 'provider' && !providerConfigured)) return;
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -69,7 +87,7 @@ export const B2CGamePlayer: React.FC = () => {
       {!loading && !error && game && art && <div className="rounded-3xl bg-[#121A2D] border border-[#233252] overflow-hidden">
         <div className="p-8 sm:p-12 flex items-center justify-center relative min-h-52" style={{ background: `radial-gradient(circle at center, ${art.accent}40, #121A2D 70%)` }}><img src={art.icon ?? undefined} alt={`${game.name} icon`} className="h-52 w-52 sm:h-64 sm:w-64 object-contain drop-shadow-2xl" /></div>
         <div className="p-6 sm:p-10 space-y-5">
-          <div className="flex flex-wrap gap-3 items-center"><Badge variant="cyan">{art.genre}</Badge><Badge variant={game.providerLaunchAvailable ? 'success' : 'neutral'}>{game.providerLaunchAvailable ? 'Provider adapter enabled' : 'Demo only / Provider not configured'}</Badge></div>
+          <div className="flex flex-wrap gap-3 items-center"><Badge variant="cyan">{art.genre}</Badge><Badge variant={providerConfigured ? 'success' : 'neutral'}>{providerConfigured ? 'Sandbox handoff configured' : 'Demo only / Sandbox unavailable'}</Badge></div>
           <h1 className="text-3xl font-black font-display text-white">{game.name}</h1>
           <p className="text-[#98A5BF] text-sm">{art.blurb}</p>
           <p className="text-[#98A5BF] text-xs flex items-center gap-2">{game.gameMode === 'multiplayer' ? <Users className="w-4 h-4"/> : <UserRound className="w-4 h-4"/>}{game.gameMode === 'multiplayer' ? 'Multiplayer' : 'Single player'} · Game ID: {game.gameId}</p>
@@ -77,9 +95,14 @@ export const B2CGamePlayer: React.FC = () => {
           <div className="flex flex-wrap gap-3 items-center">
             {demo ? <button type="button" onClick={() => void startGame('demo')} disabled={!!pending} className="inline-flex gap-2 items-center px-6 py-3.5 rounded-xl font-semibold bg-[#7C5CFC] hover:bg-[#6947eb] disabled:opacity-60 text-white">{pending === 'demo' ? 'Preparing demo…' : 'Start demo'} <Gamepad2 className="w-4 h-4"/></button>
               : <span className="text-[#FFB547] text-sm">No demo URL is configured.</span>}
-            {game.providerLaunchAvailable && <button type="button" onClick={() => void startGame('provider')} disabled={!!pending || isInitializing || !demo} className="inline-flex gap-2 items-center px-6 py-3.5 rounded-xl font-semibold bg-[#182238] border border-[#445472] hover:bg-[#233252] disabled:opacity-60 text-white"><LockKeyhole className="w-4 h-4"/>{pending === 'provider' ? 'Checking session…' : 'Start provider sandbox'}</button>}
+            {providerConfigured && <button type="button" onClick={() => void startGame('provider')} disabled={!!pending || isInitializing || !demo} className="inline-flex gap-2 items-center px-6 py-3.5 rounded-xl font-semibold bg-[#182238] border border-[#445472] hover:bg-[#233252] disabled:opacity-60 text-white"><LockKeyhole className="w-4 h-4"/>{pending === 'provider' ? 'Checking session…' : 'Start provider sandbox'}</button>}
           </div>
-          {game.providerLaunchAvailable && !isInitializing && user?.role !== 'player' && <p className="text-[#98A5BF] text-sm">Provider mode requires your real player account. <Link to="/login" className="underline text-[#00D4FF]">Sign in</Link>.</p>}
+          {providerConfigured && !isInitializing && user?.role !== 'player' && <p className="text-[#98A5BF] text-sm">Provider mode requires your real player account. <Link to="/login" className="underline text-[#00D4FF]">Sign in</Link>.</p>}
+          {capabilityLoading && <p className="text-[#98A5BF] text-xs" role="status">Checking sandbox launch configuration…</p>}
+          {capabilityError && <p role="alert" className="text-[#FFB547] text-xs">Sandbox launch status unavailable: {capabilityError}. Demo launch remains available.</p>}
+          {selectedCapability && !providerConfigured && <p className="text-[#98A5BF] text-xs">Sandbox launch is not configured for this game. Demo play is separate from the provider wallet.</p>}
+          {selectedCapability?.providerHandoffConfigured && !selectedCapability.gameBackendConfigured && <p className="text-[#FFB547] text-xs">Game backend URL is not configured; a successful handoff cannot be verified.</p>}
+          {providerConfigured && <p className="text-[#98A5BF] text-xs">Configuration is present, but a complete game backend handoff has not been verified. Sandbox only.</p>}
           {launchError && <div role="alert" className="border border-red-500/40 bg-red-500/10 rounded-xl p-4 text-sm text-red-300">{launchError} <button type="button" onClick={() => { setLaunchError(null); void startGame(failedMode); }} className="underline ml-2">Retry launch</button></div>}
           {launch && <div role="status" className="rounded-xl bg-[#162A29] border border-emerald-700/40 p-5 space-y-3">
             <p className="text-white font-semibold">{launch.mode === 'demo' ? 'Demo is ready' : 'Sandbox session is ready'}</p>

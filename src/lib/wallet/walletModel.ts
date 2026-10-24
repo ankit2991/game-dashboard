@@ -32,6 +32,19 @@ export interface PlayerTransactionPage {
   transactions: PlayerWalletTransaction[];
 }
 export const TRANSACTION_PAGE_SIZE = 20;
+export type TransactionFilters = { operation: WalletOperation | 'all'; status: WalletTransactionStatus | 'all' };
+export const DEFAULT_TRANSACTION_FILTERS: TransactionFilters = { operation: 'all', status: 'all' };
+
+export function transactionQuery(offset: number, filters: TransactionFilters = DEFAULT_TRANSACTION_FILTERS) {
+  const page = transactionPaging(offset);
+  if (!['all', 'bet', 'win', 'refund'].includes(filters.operation) ||
+      !['all', 'succeeded', 'rejected', 'inflight', 'indeterminate'].includes(filters.status)) {
+    throw new Error('Invalid transaction filters');
+  }
+  return { ...page, ...(filters.operation === 'all' ? {} : { operation: filters.operation }),
+    ...(filters.status === 'all' ? {} : { status: filters.status }) };
+}
+
 
 export function transactionPaging(offset: number) {
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > 10000 || offset % TRANSACTION_PAGE_SIZE !== 0) {
@@ -53,7 +66,7 @@ export function validateWalletOverview(data: WalletOverview): WalletOverview {
       data.transactionHistoryAvailable !== data.configured) throw new Error('Invalid wallet summary response');
   return data;
 }
-export function validateTransactionPage(data: PlayerTransactionPage, offset: number): PlayerTransactionPage {
+export function validateTransactionPage(data: PlayerTransactionPage, offset: number, filters: TransactionFilters = DEFAULT_TRANSACTION_FILTERS): PlayerTransactionPage {
   if (!data || data.source !== 'provider_ledger' || data.mode !== 'sandbox_only' ||
       typeof data.configured !== 'boolean' || data.offset !== offset ||
       data.limit !== TRANSACTION_PAGE_SIZE || !Number.isSafeInteger(data.total) ||
@@ -68,7 +81,9 @@ export function validateTransactionPage(data: PlayerTransactionPage, offset: num
         !['succeeded', 'rejected', 'inflight', 'indeterminate'].includes(row.status) ||
         !Number.isSafeInteger(row.amountMinor) || row.amountMinor <= 0 ||
         typeof row.currency !== 'string' || !/^[A-Z0-9]{3,8}$/.test(row.currency) ||
-        !Number.isFinite(Date.parse(row.createdAt)) || !Number.isFinite(Date.parse(row.updatedAt))) {
+        !Number.isFinite(Date.parse(row.createdAt)) || !Number.isFinite(Date.parse(row.updatedAt)) ||
+        (filters.operation !== 'all' && row.operation !== filters.operation) ||
+        (filters.status !== 'all' && row.status !== filters.status)) {
       throw new Error('Invalid transaction record');
     }
   }

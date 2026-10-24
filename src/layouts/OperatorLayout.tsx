@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -37,16 +38,16 @@ export const OperatorLayout: React.FC = () => {
   const [showCompanyMenu, setShowCompanyMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [environment, setEnvironment] = useState<'sandbox' | 'production'>('production');
+  const environment = 'sandbox' as const;
 
-  const navItems = [
+  const navItems: { label: string; path: string; icon: LucideIcon; badge?: string; highlight?: boolean }[] = [
     { label: 'Overview', path: '/operator/dashboard', icon: LayoutDashboard },
-    { label: 'Game Marketplace', path: '/operator/catalog', icon: Gamepad2, badge: '742' },
-    { label: 'My Integrated Games', path: '/operator/my-games', icon: CheckCircle, badge: '420' },
+    { label: 'Game Marketplace', path: '/operator/catalog', icon: Gamepad2 },
+    { label: 'My Selected Games', path: '/operator/my-games', icon: CheckCircle },
     { label: 'API Credentials', path: '/operator/credentials', icon: KeyRound },
     { label: 'Developer API Docs', path: '/operator/docs', icon: FileCode2, highlight: true },
     { label: 'Integration Logs', path: '/operator/logs', icon: Terminal },
-    { label: 'Transactions & GGR', path: '/operator/transactions', icon: ArrowLeftRight },
+    { label: 'Sandbox Transactions', path: '/operator/transactions', icon: ArrowLeftRight },
     { label: 'Webhooks', path: '/operator/webhooks', icon: Webhook },
     { label: 'Team Members', path: '/operator/team', icon: Users },
   ];
@@ -88,12 +89,12 @@ export const OperatorLayout: React.FC = () => {
           {!sidebarCollapsed && (
             <div className="px-4 pt-4">
               <div className="bg-[#182238] border border-[#233252] rounded-xl p-2.5">
-                <span className="text-[10px] uppercase font-semibold text-[#64748B] block">Licensed Operator</span>
+                <span className="text-[10px] uppercase font-semibold text-[#64748B] block">Operator account</span>
                 <div className="flex items-center justify-between mt-1">
                   <div className="min-w-0">
-                    <p className="font-semibold text-white text-xs truncate">{user?.companyName || 'Asia Gaming Network Ltd'}</p>
+                    <p className="font-semibold text-white text-xs truncate">{user?.companyName || 'Operator'}</p>
                     <span className="text-[10px] text-[#20C997] flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#20C997]" /> Tier 1 Aggregator
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#20C997]" /> {user?.operatorApprovalStatus || 'Pending'}
                     </span>
                   </div>
                 </div>
@@ -146,9 +147,9 @@ export const OperatorLayout: React.FC = () => {
               <div className="bg-gradient-to-br from-[#7C5CFC]/20 to-[#00D4FF]/10 border border-[#7C5CFC]/30 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-1 text-white font-semibold text-xs">
                   <Code2 className="w-4 h-4 text-[#00D4FF]" />
-                  <span>REST & WebSocket APIs</span>
+                  <span>Provider REST API</span>
                 </div>
-                <p className="text-[11px] text-[#98A5BF]">SDKs ready for Node, PHP, Python & cURL.</p>
+                <p className="text-[11px] text-[#98A5BF]">Server-side integration and API reference.</p>
                 <Link
                   to="/operator/docs"
                   className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-[#00D4FF] hover:underline"
@@ -209,41 +210,13 @@ export const OperatorLayout: React.FC = () => {
                 <Menu className="w-5 h-5" />
               </button>
 
-              <div className="relative w-full max-w-sm hidden sm:block">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-                <input
-                  type="text"
-                  placeholder="Search catalog games, API keys, logs..."
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#0B1020] text-xs text-[#F5F7FF] placeholder-[#64748B] border border-[#233252] focus:border-[#00D4FF] outline-none transition-all"
-                />
-              </div>
+
             </div>
 
             {/* Right: Environment Selector, Docs shortcut, Operator Profile */}
             <div className="flex items-center gap-3">
-              {/* Interactive Environment Toggle */}
-              <div className="bg-[#0B1020] p-1 rounded-xl border border-[#233252] flex items-center gap-1 text-xs">
-                <button
-                  onClick={() => setEnvironment('production')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                    environment === 'production'
-                      ? 'bg-[#20C997] text-[#0B1020] shadow-sm'
-                      : 'text-[#98A5BF] hover:text-white'
-                  }`}
-                >
-                  ● Production
-                </button>
-                <button
-                  onClick={() => setEnvironment('sandbox')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
-                    environment === 'sandbox'
-                      ? 'bg-[#00D4FF] text-[#0B1020] shadow-sm'
-                      : 'text-[#98A5BF] hover:text-white'
-                  }`}
-                >
-                  ⚡ Sandbox
-                </button>
-              </div>
+              {/* This portal has no production-money integration. Do not present a fake mode toggle. */}
+              <span className="text-xs px-3 py-1.5 rounded-xl border border-[#2D3E66] text-[#00D4FF]">Sandbox only</span>
 
               {/* API Docs Button */}
               <Link
@@ -265,7 +238,7 @@ export const OperatorLayout: React.FC = () => {
                   </div>
                   <div className="hidden sm:flex flex-col text-left">
                     <span className="text-xs font-semibold text-white">{user?.name || 'Daniel Tan'}</span>
-                    <span className="text-[10px] text-[#00D4FF] truncate max-w-[120px]">{user?.companyName || 'Asia Gaming Ltd'}</span>
+                    <span className="text-[10px] text-[#00D4FF] truncate max-w-[120px]">{user?.companyName || 'Operator'}</span>
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-[#98A5BF]" />
                 </button>
@@ -273,8 +246,8 @@ export const OperatorLayout: React.FC = () => {
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#121A2D] border border-[#2D3E66] shadow-2xl p-2 z-50 text-xs">
                     <div className="px-3 py-2 border-b border-[#233252]">
-                      <p className="font-semibold text-white truncate">{user?.email || 'd.tan@asiagaming.net'}</p>
-                      <p className="text-[10px] text-[#20C997]">Account Status: Licensed & Active</p>
+                      <p className="font-semibold text-white truncate">{user?.email || 'Operator account'}</p>
+                      <p className="text-[10px] text-[#20C997]">Account status: {user?.operatorApprovalStatus || 'pending'}</p>
                     </div>
                     <Link
                       to="/operator/credentials"

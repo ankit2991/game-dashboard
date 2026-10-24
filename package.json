@@ -21,7 +21,16 @@
     "test:netlify": "node --test tests/patch14-netlify.test.mjs",
     "test:game-icons": "node --experimental-strip-types --test tests/patch15-game-icons.test.mjs",
     "preflight:netlify": "node tools/patch14-ensure-netlify-redirects.mjs && node tools/patch14-netlify-preflight.mjs",
-    "netlify:fix": "node tools/patch14-ensure-netlify-redirects.mjs"
+    "netlify:fix": "node tools/patch14-ensure-netlify-redirects.mjs",
+    "test:dev-api": "node --test tests/patch-live-dev-proxy.test.mjs",
+    "diagnose:api": "node tools/patch-local-api-diagnose.mjs",
+    "test:auth-patch15": "node --experimental-strip-types --test tests/patch15-auth-validation.test.mjs",
+    "test:operator-dashboard": "node --experimental-strip-types --test tests/patch17-operator-dashboard.test.mjs",
+    "test:admin-patch18": "node --test tests/patch18-admin-management.test.mjs",
+    "test:launch-capabilities": "node --experimental-strip-types --test tests/patch19-launch-capabilities.test.mjs",
+    "test:cleanup": "node --test tests/patch20-cleanup.test.mjs",
+    "test:patch21": "node --test tests/patch21-release.test.mjs",
+    "release:verify": "npm run build && npm run preflight:netlify && node tools/patch21-release-preflight.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",

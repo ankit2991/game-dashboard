@@ -55,7 +55,7 @@ export const B2CLeaderboard: React.FC = () => {
             <AlertTriangle className="w-7 h-7 mx-auto text-[#FFB547]" />
             <h2 className="text-white font-bold">Leaderboard unavailable</h2>
             <p className="text-xs text-[#98A5BF]">{error}</p>
-            <p className="text-xs text-[#98A5BF]">The backend requires LEADERBOARD_ENABLED=true. Results must come from authorized game backends.</p>
+            <p className="text-xs text-[#98A5BF]">If the feature is disabled, check LEADERBOARD_ENABLED on Render. If enabled, check the API URL, connection and error shown above. Rankings appear only after verified game results are submitted.</p>
             <Button variant="outline" onClick={refresh}>Try again</Button>
           </div>
         </Card>

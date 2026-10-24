@@ -47,6 +47,7 @@ import { PlayerDashboardLayout } from './layouts/PlayerDashboardLayout';
 import { PlayerOverview } from './modules/b2c/pages/PlayerOverview';
 import { PlayerWallet } from './modules/b2c/pages/PlayerWallet';
 import { PlayerTransactions } from './modules/b2c/pages/PlayerTransactions';
+import { UnavailablePlayerFeature } from './modules/b2c/pages/UnavailablePlayerFeature';
 
 export function App() {
   return (
@@ -82,8 +83,8 @@ export function App() {
             <Route path="profile" element={<PlayerOverview />} />
             <Route path="wallet" element={<PlayerWallet />} />
             <Route path="transactions" element={<PlayerTransactions />} />
-            <Route path="favorites" element={<B2CGamesLobby />} />
-            <Route path="security" element={<PlayerOverview />} />
+            <Route path="favorites" element={<UnavailablePlayerFeature feature="favorites" />} />
+            <Route path="security" element={<UnavailablePlayerFeature feature="security" />} />
           </Route>
 
           {/* Super Admin Module - Protected for 'super_admin' role only */}

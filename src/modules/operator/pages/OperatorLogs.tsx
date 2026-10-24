@@ -14,8 +14,8 @@ export const OperatorLogs: React.FC = () => {
       <h1 className="text-2xl text-white font-bold flex items-center gap-2"><Terminal className="text-[#00D4FF]"/>Wallet Activity</h1>
       <p className="text-[#98A5BF] text-xs mt-1">Read-only lifecycle events derived from the sandbox wallet ledger. Raw HTTP request logs, headers, latency and payloads are not recorded by this endpoint.</p>
     </div><Button size="sm" variant="outline" onClick={refresh}><RefreshCw className="w-4 h-4"/> Refresh</Button></div>
-    <Card>{error && <p role="alert" className="text-[#FF5D73]">{error}</p>}
-      {loading ? <p className="text-[#98A5BF]">Loading recorded activity…</p> : !data?.configured ? <p className="text-[#98A5BF]">Partner not provisioned. No ledger activity is available.</p> : !data.entries.length ? <p className="text-[#98A5BF]">No recorded wallet activity yet.</p> :
+    <Card>{error && <div role="alert" className="text-[#FF5D73] flex items-center gap-3 text-sm">{error} <Button size="sm" variant="outline" onClick={refresh}>Try again</Button></div>}
+      {loading ? <p role="status" className="text-[#98A5BF]">Loading recorded activity…</p> : error ? null : !data?.configured ? <p className="text-[#98A5BF]">Partner not provisioned. No ledger activity is available.</p> : !data.entries.length ? <p className="text-[#98A5BF]">No recorded wallet activity yet.</p> :
       <div className="overflow-x-auto"><table className="w-full text-xs text-white text-left"><thead className="text-[#98A5BF]"><tr>{['Transaction','Event','Game','Status','Updated at'].map(v => <th className="p-3" key={v}>{v}</th>)}</tr></thead><tbody>
         {data.entries.map(v => <tr className="border-t border-[#233252]" key={v.id}><td className="p-3 font-mono">{v.id}</td><td className="p-3">{v.type}</td><td className="p-3">{v.gameId}</td><td className="p-3">{v.status}</td><td className="p-3">{new Date(v.occurredAt).toLocaleString()}</td></tr>)}
       </tbody></table></div>}

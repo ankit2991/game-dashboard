@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (previousOperator) void operatorApi.logout(previousOperator.refreshToken).catch(() => {});
     if (previousAdmin) void adminApi.logout(previousAdmin.refreshToken).catch(() => {});
     const session = await adminApi.login(email, password);
-    if (version !== revision.current) { void adminApi.logout(session.refreshToken).catch(() => {}); return; }
+    if (version !== revision.current) { void adminApi.logout(session.refreshToken).catch(() => {}); throw new ApiError('Session changed. Please sign in again.', 401, 'SESSION_CHANGED'); }
     acceptAdminSession(session);
   }, [acceptAdminSession]);
 
@@ -233,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (oldOperator) void operatorApi.logout(oldOperator.refreshToken).catch(() => {});
     if (oldAdmin) void adminApi.logout(oldAdmin.refreshToken).catch(() => {});
     const session = await playerApi.login(identifier, password);
-    if (version !== revision.current) return;
+    if (version !== revision.current) { void playerApi.logout(session.refreshToken).catch(() => {}); throw new ApiError('Session changed. Please sign in again.', 401, 'SESSION_CHANGED'); }
     acceptPlayerSession(session, remember);
   }, [acceptPlayerSession]);
 
@@ -253,7 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (oldOperator) void operatorApi.logout(oldOperator.refreshToken).catch(() => {});
     if (oldAdmin) void adminApi.logout(oldAdmin.refreshToken).catch(() => {});
     const session = await playerApi.register(fields);
-    if (version !== revision.current) return;
+    if (version !== revision.current) { void playerApi.logout(session.refreshToken).catch(() => {}); throw new ApiError('Session changed. Please sign in again.', 401, 'SESSION_CHANGED'); }
     acceptPlayerSession(session, remember);
   }, [acceptPlayerSession]);
 
@@ -315,7 +315,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (previousOperator) void operatorApi.logout(previousOperator.refreshToken).catch(() => {});
     if (previousAdmin) void adminApi.logout(previousAdmin.refreshToken).catch(() => {});
     const session = await operatorApi.login(email, password);
-    if (version !== revision.current) return session.user.status;
+    if (version !== revision.current) { void operatorApi.logout(session.refreshToken).catch(() => {}); throw new ApiError('Session changed. Please sign in again.', 401, 'SESSION_CHANGED'); }
     acceptOperatorSession(session, remember);
     return session.user.status;
   }, [acceptOperatorSession]);
@@ -336,7 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (previousOperator) void operatorApi.logout(previousOperator.refreshToken).catch(() => {});
     if (previousAdmin) void adminApi.logout(previousAdmin.refreshToken).catch(() => {});
     const session = await operatorApi.register(fields);
-    if (version !== revision.current) return session.user.status;
+    if (version !== revision.current) { void operatorApi.logout(session.refreshToken).catch(() => {}); throw new ApiError('Session changed. Please sign in again.', 401, 'SESSION_CHANGED'); }
     acceptOperatorSession(session, remember);
     return session.user.status;
   }, [acceptOperatorSession]);

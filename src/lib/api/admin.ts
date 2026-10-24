@@ -27,6 +27,11 @@ export interface AdminSettings {
   features: Record<'b2cAuth'|'operatorAuth'|'partnerManagement'|'leaderboards'|'leaderboardSubmissions'|
     'providerLaunch'|'sandboxWalletTransactions'|'adminPortal', boolean>;
 }
+export interface AdminPlayer {id:string; email:string; username:string; displayName:string; locale:string; createdAt:string}
+export interface AdminPlayersPage {total:number; players:AdminPlayer[]}
+export interface AdminTransaction {transaction_id:string; partner_id:string; game_id:string; operation:string; amount_minor:number;
+  currency:string; status:string; created_ms:number; updated_ms:number}
+export interface AdminTransactionsPage {total:number; rows:AdminTransaction[]; sandboxOnly:true}
 export type AdminDecision = 'approve' | 'reject' | 'suspend' | 'reopen';
 export const adminApi = {
   login: (email: string, password: string) => apiRequest<AdminSession>('/admin/auth/login', {method: 'POST', body: {email, password}}),
@@ -39,6 +44,10 @@ export const adminApi = {
     apiRequest<{games: AdminGame[]}>('/admin/portal/games', {accessToken, signal}),
   settings: (accessToken: string, signal?: AbortSignal) =>
     apiRequest<AdminSettings>('/admin/portal/settings', {accessToken, signal}),
+  players: (accessToken: string, limit = 20, offset = 0, signal?: AbortSignal) =>
+    apiRequest<AdminPlayersPage>('/admin/portal/players', {accessToken, signal, query:{limit,offset}}),
+  transactions: (accessToken: string, limit = 20, offset = 0, signal?: AbortSignal) =>
+    apiRequest<AdminTransactionsPage>('/admin/portal/transactions', {accessToken, signal, query:{limit,offset}}),
   operators: (accessToken: string, signal?: AbortSignal) =>
     apiRequest<{operators: AdminOperator[]; total: number}>('/admin/portal/operators', {accessToken, signal}),
   decision: (accessToken: string, id: string, action: AdminDecision) => {

@@ -14,7 +14,8 @@ import {
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useAuth } from '../../../context/AuthContext';
-import { ApiError } from '../../../lib/api/client';
+import { authErrorMessage } from '../../../lib/auth/authError';
+import { validateOperatorRegistration, accountEmailPattern } from '../../../lib/auth/validation';
 import { operatorTarget } from '../../../lib/operator/operatorModel';
 
 export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ initialMode = 'login' }) => {
@@ -47,12 +48,13 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
+    if (!accountEmailPattern.test(loginEmail.trim()) || !loginPassword) { setAuthError('Enter a valid business email and password.'); return; }
     setIsLoading(true);
     try {
-      const status = await loginOperator(loginEmail, loginPassword, rememberMe);
+      const status = await loginOperator(loginEmail.trim(), loginPassword, rememberMe);
       navigate(operatorTarget(status), { replace: true });
     } catch (error) {
-      setAuthError(error instanceof ApiError ? error.message : 'Sign-in failed. Please try again.');
+      setAuthError(authErrorMessage(error, 'operator'));
     } finally { setIsLoading(false); }
   };
 
@@ -60,16 +62,18 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
     e.preventDefault();
     setAuthError('');
     if (!termsAccepted) { setAuthError('You must accept the terms to register.'); return; }
+    const validationError = validateOperatorRegistration({companyName: companyName.trim(), website: website.trim(), email: email.trim(), contactPerson: contactPerson.trim(), phone: phone.trim(), country, businessType, registrationNumber: regNumber, password});
+    if (validationError) { setAuthError(validationError); return; }
     setIsLoading(true);
     try {
       await registerOperator({
-        companyName, website, email, contactPerson, phone, country,
+        companyName: companyName.trim(), website: website.trim(), email: email.trim(), contactPerson: contactPerson.trim(), phone: phone.trim(), country,
         businessType, registrationNumber: regNumber,
         password, termsAccepted: true,
       }, rememberMe);
       navigate('/operator/pending-approval', { replace: true });
     } catch (error) {
-      setAuthError(error instanceof ApiError ? error.message : 'Registration failed. Please try again.');
+      setAuthError(authErrorMessage(error, 'operator'));
     } finally { setIsLoading(false); }
   };
 

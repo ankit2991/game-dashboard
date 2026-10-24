@@ -13,7 +13,8 @@ import {
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Modal } from '../../../components/ui/Modal';
-import { ApiError } from '../../../lib/api/client';
+import { authErrorMessage } from '../../../lib/auth/authError';
+import { validatePlayerRegistration } from '../../../lib/auth/validation';
 import { useAuth } from '../../../context/AuthContext';
 
 export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ initialMode = 'login' }) => {
@@ -42,25 +43,18 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const errorMessage = (error: unknown): string => {
-    if (!(error instanceof ApiError)) return error instanceof Error ? error.message : 'Unable to authenticate.';
-    if (error.code === 'INVALID_CREDENTIALS') return 'Incorrect username/email or password.';
-    if (error.code === 'ACCOUNT_ALREADY_EXISTS') return 'Email or username is already registered.';
-    if (error.status === 404) return 'Player authentication is not enabled on the backend. Set B2C_AUTH_ENABLED=true.';
-    if (error.status === 429) return 'Too many attempts. Please try again later.';
-    return error.message;
-  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
+    if (!loginIdentifier.trim() || !loginPassword) { setToastMessage('Enter your email/username and password.'); return; }
     setToastMessage(null);
     setIsLoading(true);
     try {
       await loginPlayer(loginIdentifier.trim(), loginPassword, rememberMe);
       navigate('/player/profile', { replace: true });
     } catch (error) {
-      setToastMessage(errorMessage(error));
+      setToastMessage(authErrorMessage(error, 'player'));
     } finally {
       setIsLoading(false);
     }
@@ -71,10 +65,8 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
     if (isLoading) return;
     if (!agreeTerms) { setToastMessage('Please accept the Terms of Service.'); return; }
     if (password !== confirmPassword) { setToastMessage('Passwords do not match.'); return; }
-    if (password.length < 12 || password.length > 128) {
-      setToastMessage('Password must be between 12 and 128 characters.');
-      return;
-    }
+    const validationError = validatePlayerRegistration({ displayName: fullName, username, email, password });
+    if (validationError) { setToastMessage(validationError); return; }
     setToastMessage(null);
     setIsLoading(true);
     try {
@@ -83,7 +75,7 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
       }, rememberMe);
       navigate('/player/profile', { replace: true });
     } catch (error) {
-      setToastMessage(errorMessage(error));
+      setToastMessage(authErrorMessage(error, 'player'));
     } finally {
       setIsLoading(false);
     }

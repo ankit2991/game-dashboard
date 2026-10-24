@@ -18,7 +18,10 @@ function memberSince(value: string | undefined) {
 export const PlayerOverview: React.FC = () => {
   const { user, loadPlayerProfile, updatePlayerProfile } = useAuth();
   const catalog = useProviderCatalog();
-  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const [profileState, setProfileState] = useState<PlayerProfile | null>(null);
+  const playerId = user?.role === 'player' ? user.id : null;
+  // Never render a prior account's private profile during a session/account change.
+  const profile = profileState?.id === playerId ? profileState : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -33,12 +36,16 @@ export const PlayerOverview: React.FC = () => {
     let active = true;
     setLoading(true);
     setError(null);
-    loadPlayerProfile().then(result => { if (active) setProfile(result); })
+    setProfileState(null);
+    loadPlayerProfile().then(result => {
+      if (result.id !== playerId) throw new Error('Profile does not match the active player session.');
+      if (active) setProfileState(result);
+    })
       .catch((cause: unknown) => {
-        if (active) { setProfile(null); setError(cause instanceof Error ? cause.message : 'Unable to load profile.'); }
+        if (active) { setProfileState(null); setError(cause instanceof Error ? cause.message : 'Unable to load profile.'); }
       }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [loadPlayerProfile, revision]);
+  }, [loadPlayerProfile, playerId, revision]);
 
   const openEdit = () => {
     if (!profile) return;
@@ -59,7 +66,8 @@ export const PlayerOverview: React.FC = () => {
     setSaving(true);
     try {
       const updated = await updatePlayerProfile({ displayName: name, locale });
-      setProfile(updated);
+      if (updated.id !== playerId) throw new Error('Account changed while updating the profile.');
+      setProfileState(updated);
       setEditing(false);
       setNotice('Your profile was updated on the server.');
     } catch (cause) {
@@ -67,7 +75,7 @@ export const PlayerOverview: React.FC = () => {
     } finally { setSaving(false); }
   };
 
-  if (loading) return <div role="status" className="text-[#98A5BF] p-8">Loading your account from the backend…</div>;
+  if (loading || (profileState !== null && profile === null)) return <div role="status" className="text-[#98A5BF] p-8">Loading your account from the backend…</div>;
   if (error || !profile) return (
     <Card><div role="alert" className="space-y-3 p-6">
       <p className="text-white font-bold">Account details are unavailable</p>

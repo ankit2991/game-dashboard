@@ -36,9 +36,9 @@ export const OperatorCredentials: React.FC = () => {
       <Button variant="outline" size="sm" onClick={load} leftIcon={<RefreshCcw className="w-4 h-4" />}>Refresh</Button>
     </div>
     <div className="p-4 bg-[#FFB547]/10 border border-[#FFB547]/30 rounded-xl text-xs text-[#FFB547] flex gap-2"><AlertTriangle className="w-5 h-5 shrink-0"/>Sandbox only. No live-money settlement, browser secret retrieval, fake production keys or simulated IP allowlist. Provisioning and rotation are administrator-only actions.</div>
-    {error && <p role="alert" className="text-[#FF5D73] text-sm">{error}</p>}
+    {error && <div role="alert" className="text-[#FF5D73] text-sm flex items-center gap-3">{error}<Button variant="outline" size="sm" onClick={load}>Retry</Button></div>}
     <Card><CardHeader title="Partner Provisioning" subtitle="Live status retrieved from the backend" />
-      {!credentials ? <p className="text-[#98A5BF] text-sm">Loading credentials status…</p> : <div className="space-y-3 text-sm">
+      {!credentials ? (error ? <p className="text-[#98A5BF] text-sm">Credential status unavailable.</p> : <p role="status" className="text-[#98A5BF] text-sm">Loading credentials status…</p>) : <div className="space-y-3 text-sm">
         <p className="text-white">Status: <strong className="text-[#00D4FF]">{credentials.provisioned ? credentials.partner?.status : 'Not provisioned'}</strong></p>
         {credentials.partner && <><p className="text-[#98A5BF]">Partner ID: <code className="text-white">{credentials.partner.id}</code></p>
           <p className="text-[#98A5BF]">Current API permissions: {credentials.partner.allowedGames.length ? credentials.partner.allowedGames.join(', ') : 'None'}</p></>}

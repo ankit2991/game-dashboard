@@ -4,6 +4,8 @@ import { ShieldCheck, Lock, Mail, Eye, EyeOff, ArrowRight, ShieldAlert } from 'l
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useAuth } from '../../../context/AuthContext';
+import { authErrorMessage } from '../../../lib/auth/authError';
+import { accountEmailPattern } from '../../../lib/auth/validation';
 
 /** Patch 10: backend-verified admin login. No demo credentials or simulated 2FA. */
 export const AdminLogin: React.FC = () => {
@@ -18,13 +20,14 @@ export const AdminLogin: React.FC = () => {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (busy) return;
+    if (!accountEmailPattern.test(email.trim()) || !password) { setError('Enter a valid administrator email and password.'); return; }
     setError(''); setBusy(true);
     try {
       await loginAdmin(email.trim(), password);
       setPassword('');
       navigate('/admin', {replace: true});
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to sign in.');
+      setError(authErrorMessage(cause, 'admin'));
     } finally { setBusy(false); }
   }
 

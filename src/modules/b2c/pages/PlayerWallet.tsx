@@ -23,8 +23,8 @@ export const PlayerWallet: React.FC = () => {
       </div>
       <div className="p-5 rounded-2xl bg-[#121A2D] border border-[#233252] space-y-2">
         <p className="text-xs text-[#98A5BF] font-semibold uppercase">Provider sandbox</p>
-        <p className="text-xl font-bold text-white">{loading ? 'Checking…' : error ? 'Unavailable' : wallet?.configured ? 'Operator configured' : 'Not configured'}</p>
-        <p className="text-xs text-[#98A5BF]">{wallet?.configured ? 'Provider-ledger read is scoped to your account' : 'Requires B2C_LAUNCH_PARTNER_ID on the backend'}</p>
+        <p className="text-xl font-bold text-white">{loading ? 'Checking…' : error ? 'Unavailable' : wallet?.configured ? 'Ledger scope selected' : 'Not configured'}</p>
+        <p className="text-xs text-[#98A5BF]">{wallet?.configured ? 'Read-only ledger access configured; live wallet availability is not verified' : 'Requires B2C_LAUNCH_PARTNER_ID on the backend'}</p>
       </div>
     </div>
     {error && <Card><div role="alert" className="text-[#FFB547] text-sm">{error}</div></Card>}

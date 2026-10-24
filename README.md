@@ -1,3 +1,5 @@
+**Current baseline: Patch 21 (cumulative).** Deployment and acceptance instructions: [PATCH_21_RELEASE_VALIDATION.md](PATCH_21_RELEASE_VALIDATION.md). Earlier patch headings below describe historical work; do not treat their provisional statements as the current status.
+
 > **Live Netlify instructions (Patch 14):** See [`PATCH_14_NETLIFY_RENDER_GUIDE.md`](PATCH_14_NETLIFY_RENDER_GUIDE.md). Upload the built `dist/`, not the full integration ZIP.
 
 # Game Dashboard — Frontend (Cumulative Integration Patch 11)

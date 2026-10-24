@@ -37,9 +37,9 @@ export const PortalSwitcher: React.FC = () => {
             <span className="text-white hidden sm:inline">SAAS PLATFORM</span>
           </div>
           <span className="text-[#64748B] hidden sm:inline">|</span>
-          <span className="text-[#98A5BF] hidden md:inline">Frontend UI Prototype</span>
+          <span className="text-[#98A5BF] hidden md:inline">Game Provider portals</span>
           <span className="hidden sm:inline-block">
-            <Badge size="sm" variant="cyan" dot>UI Simulation</Badge>
+            <Badge size="sm" variant="cyan" dot>Sandbox only</Badge>
           </span>
         </div>
 

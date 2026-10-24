@@ -89,7 +89,24 @@ export interface OperatorLedgerPage { transactions: OperatorLedgerTx[]; total: n
 export interface OperatorActivity { id: string; occurredAt: string; type: string; status: string; gameId: string }
 export interface OperatorActivityPage { entries: OperatorActivity[]; total: number; limit: number;
   offset: number; configured: boolean; source: string; rawHttpLogsAvailable?: false }
+export interface OperatorDashboardData {
+  account: { id: string; companyName: string; status: OperatorStatus };
+  availableGames: number;
+  selectedGames: string[];
+  authorizedGames: string[];
+  partnerProvisioned: boolean;
+  partnerStatus: string | null;
+  teamDraftCount: number;
+  webhookDraftConfigured: boolean;
+  transactionsTotal: number;
+  recentActivity: OperatorActivity[];
+  sandboxOnly: true;
+  rawHttpMetricsAvailable: false;
+  financialMetricsAvailable: false;
+}
 export const operatorOperationsApi = {
+  dashboard: (token: string, signal?: AbortSignal) =>
+    apiRequest<OperatorDashboardData>('/operator/dashboard', { accessToken: token, signal }),
   team: (token: string, signal?: AbortSignal) =>
     apiRequest<{ members: TeamDraft[]; invitationsSent: false; teamLoginEnabled: false }>('/operator/team', { accessToken: token, signal }),
   addTeamDraft: (token: string, draft: { name: string; email: string; role: TeamRole }) =>

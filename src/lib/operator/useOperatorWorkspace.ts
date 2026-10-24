@@ -13,7 +13,7 @@ export function useOperatorWorkspace() {
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const abort = new AbortController();
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setGames([]); setSelectedGames([]);
     void (async () => {
       const token = await getOperatorAccessToken();
       if (!token) throw new Error('Operator session required.');

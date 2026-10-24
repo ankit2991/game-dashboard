@@ -1,243 +1,86 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Building2,
-  Gamepad2,
-  Cpu,
-  Zap,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  FileCode2,
-  Layers,
-  Sparkles,
-  Server,
-  Lock,
-  Globe,
-  Coins
-} from 'lucide-react';
-import { Button } from '../../../components/ui/Button';
+import { ArrowRight, Building2, BookOpen, Gamepad2, LockKeyhole, RefreshCw, ShieldCheck, Wallet } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge';
-import { mockProviders, mockGames } from '../../../data/mock/gamesData';
+import { Button } from '../../../components/ui/Button';
+import { useProviderCatalog } from '../../../lib/catalog/useProviderCatalog';
+import { getCatalogArtwork } from '../../../lib/catalog/catalogModel';
 
+/** Public operator page: every game and count is derived from the provider API. */
 export const OperatorLanding: React.FC = () => {
+  const { games, loading, error, refresh } = useProviderCatalog();
   return (
-    <div className="min-h-screen bg-[#0B1020] text-[#F5F7FF] flex flex-col font-sans relative selection:bg-[#00D4FF] selection:text-[#0B1020]">
-      {/* Top Navigation */}
-      <header className="border-b border-[#233252]/80 bg-[#121A2D]/80 backdrop-blur-md sticky top-0 z-30 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/operator" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00D4FF] to-[#7C5CFC] flex items-center justify-center font-bold text-[#0B1020] shadow-lg shadow-[#00D4FF]/25">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <span className="font-display font-bold text-lg text-white tracking-wide">
-                NEXUS <span className="text-[#00D4FF]">PROVIDER</span>
-              </span>
-              <span className="text-[10px] text-[#98A5BF] block -mt-1">B2B Game Aggregation Gateway</span>
-            </div>
+    <div className="min-h-screen bg-[#0B1020] text-[#F5F7FF] flex flex-col font-sans">
+      <header className="border-b border-[#233252] bg-[#121A2D]/90 sticky top-0 z-30 px-4 sm:px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-wrap gap-4 items-center justify-between">
+          <Link to="/operator" className="flex items-center gap-3 font-display font-bold tracking-wide text-lg">
+            <span className="p-2 rounded-xl bg-[#182238] border border-[#233252]"><Building2 className="text-[#00D4FF]" size={22} /></span>
+            NEXUS <span className="text-[#00D4FF]">PROVIDER</span>
           </Link>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-[#98A5BF]">
-            <a href="#benefits" className="hover:text-white transition-colors">Why Nexus</a>
-            <a href="#providers" className="hover:text-white transition-colors">Studio Partners</a>
-            <a href="#workflow" className="hover:text-white transition-colors">Integration Flow</a>
-            <Link to="/operator/docs" className="hover:text-[#00D4FF] transition-colors flex items-center gap-1">
-              <span>API Reference</span>
-              <Badge variant="cyan" size="sm">v1.0</Badge>
-            </Link>
+          <nav className="flex items-center gap-2 sm:gap-3 text-xs">
+            <Link to="/operator/docs" className="text-[#98A5BF] hover:text-white px-2 py-2">API reference</Link>
+            <Link to="/operator/login"><Button size="sm" variant="outline">Operator login</Button></Link>
+            <Link to="/operator/register"><Button size="sm" variant="cyan">Register company</Button></Link>
           </nav>
-
-          <div className="flex items-center gap-3">
-            <Link to="/operator/login">
-              <Button variant="outline" size="sm">Operator Login</Button>
-            </Link>
-            <Link to="/operator/register">
-              <Button variant="cyan" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                Register Company
-              </Button>
-            </Link>
-          </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-16 px-6 overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-[#7C5CFC]/20 to-[#00D4FF]/20 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <Badge variant="cyan" size="md" className="mb-4 shadow-lg shadow-[#00D4FF]/10">
-            ⚡ Next-Gen Aggregator Gateway for Licensed iGaming Brands
-          </Badge>
-
-          <h1 className="text-4xl sm:text-6xl font-bold font-display tracking-tight text-white leading-tight">
-            One Unified API. <br />
-            <span className="bg-gradient-to-r from-[#00D4FF] via-[#A885FF] to-[#7C5CFC] bg-clip-text text-transparent">
-              Multiple World-Class Game Studios.
-            </span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-[#98A5BF] max-w-2xl mx-auto mt-5 leading-relaxed">
-            Eliminate individual studio integrations. Connect your casino, sportsbook, or white-label portal to 700+ certified slots, crash games, and live dealer feeds through a single seamless wallet callback protocol.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-3.5 mt-8">
-            <Link to="/operator/register">
-              <Button variant="cyan" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Start Instant Sandbox Integration
-              </Button>
-            </Link>
-            <Link to="/operator/dashboard">
-              <Button variant="outline" size="lg">
-                Explore Demo Operator Dashboard
-              </Button>
-            </Link>
-          </div>
-
-          {/* Quick Metrics */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto mt-14 pt-8 border-t border-[#233252]/60">
-            <div>
-              <p className="text-2xl font-bold text-white font-display">740+</p>
-              <span className="text-xs text-[#98A5BF]">Aggregated Titles</span>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[#00D4FF] font-display">42 ms</p>
-              <span className="text-xs text-[#98A5BF]">Average Game Launch</span>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[#20C997] font-display">99.99%</p>
-              <span className="text-xs text-[#98A5BF]">Platform SLA Uptime</span>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[#A885FF] font-display">12+ Currencies</p>
-              <span className="text-xs text-[#98A5BF]">Fiat & USDT Settled</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Studio Providers Carousel Bar */}
-      <section id="providers" className="py-10 border-y border-[#233252]/80 bg-[#121A2D]/60">
-        <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-xs font-semibold uppercase tracking-wider text-[#98A5BF] mb-6">
-            Integrated Upstream Studios Ready for Instant Distribution
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {mockProviders.map((prov) => (
-              <div
-                key={prov.id}
-                className="p-3.5 rounded-2xl bg-[#182238]/70 border border-[#233252] flex flex-col items-center text-center hover:border-[#00D4FF]/40 transition-all hover:scale-105"
-              >
-                <img
-                  src={prov.logo}
-                  alt={prov.name}
-                  className="w-12 h-12 rounded-xl object-cover mb-2 border border-[#2D3E66]"
-                />
-                <span className="font-semibold text-white text-xs truncate w-full">{prov.name}</span>
-                <span className="text-[10px] text-[#00D4FF] mt-0.5">{prov.totalGames} Games</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Core Benefits */}
-      <section id="benefits" className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <Badge variant="purple" size="md">Architecture & Advantage</Badge>
-          <h2 className="text-3xl font-bold font-display text-white mt-3">
-            Engineered for High-Concurrence Gaming Portals
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl bg-[#182238]/60 border border-[#233252] hover:border-[#7C5CFC]/40 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 flex items-center justify-center text-[#A885FF] mb-4">
-              <Coins className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-white text-base font-display">Seamless Wallet Protocol</h3>
-            <p className="text-xs text-[#98A5BF] mt-2 leading-relaxed">
-              No deposit transfers required. Keep player balances in your own database; Nexus securely checks balance, places bets, and credits wins in real-time.
+      <main className="flex-1">
+        <section className="px-4 sm:px-6 pt-16 pb-12 border-b border-[#233252]">
+          <div className="max-w-5xl mx-auto text-center space-y-5">
+            <Badge variant="cyan" size="md">Game provider · Sandbox stage</Badge>
+            <h1 className="text-4xl sm:text-5xl font-bold font-display leading-tight">One API for the <span className="text-[#00D4FF]">configured game catalog</span></h1>
+            <p className="text-[#98A5BF] text-sm sm:text-base max-w-3xl mx-auto leading-relaxed">
+              Browse games currently enabled in our backend catalog and request access as an operator.
+              Demo launches and sandbox provider handoffs are different features; financial settlement and production availability are not implied.
             </p>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-[#182238]/60 border border-[#233252] hover:border-[#00D4FF]/40 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#00D4FF]/15 border border-[#00D4FF]/30 flex items-center justify-center text-[#00D4FF] mb-4">
-              <Zap className="w-6 h-6" />
+            <div className="flex justify-center flex-wrap gap-3">
+              <Link to="/operator/register"><Button variant="cyan" rightIcon={<ArrowRight size={16}/>}>Request operator account</Button></Link>
+              <Link to="/operator/docs"><Button variant="outline" leftIcon={<BookOpen size={16}/>}>Read API reference</Button></Link>
             </div>
-            <h3 className="font-bold text-white text-base font-display">Single API Game Launch</h3>
-            <p className="text-xs text-[#98A5BF] mt-2 leading-relaxed">
-              A single REST call creates a temporary secure token and returns an embeddable mobile-first iframe URL for all 700+ games.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-[#182238]/60 border border-[#233252] hover:border-[#20C997]/40 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#20C997]/15 border border-[#20C997]/30 flex items-center justify-center text-[#20C997] mb-4">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-white text-base font-display">Enterprise SLA & Redundancy</h3>
-            <p className="text-xs text-[#98A5BF] mt-2 leading-relaxed">
-              Multi-region edge clusters across Asia, Europe, and Americas prevent game lag and absorb sudden viral jackpot spikes.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Integration Workflow */}
-      <section id="workflow" className="py-16 px-6 bg-[#121A2D]/50 border-t border-[#233252]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <Badge variant="cyan" size="md">3-Step Integration Flow</Badge>
-            <h2 className="text-3xl font-bold font-display text-white mt-3">From Registration to Live Games in 24 Hours</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-            <div className="p-6 rounded-2xl bg-[#0B1020] border border-[#233252]">
-              <span className="text-3xl font-bold font-display text-[#00D4FF]">01</span>
-              <h4 className="font-bold text-white text-sm mt-2">Provision API Credentials</h4>
-              <p className="text-xs text-[#98A5BF] mt-1.5">
-                Register company profile, generate Sandbox keys instantly, and test game launches with simulated credits.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-[#0B1020] border border-[#233252]">
-              <span className="text-3xl font-bold font-display text-[#7C5CFC]">02</span>
-              <h4 className="font-bold text-white text-sm mt-2">Hook Up Wallet Callback</h4>
-              <p className="text-xs text-[#98A5BF] mt-1.5">
-                Implement 3 endpoints: <code className="text-[#A885FF]">/balance</code>, <code className="text-[#A885FF]">/bet</code>, and <code className="text-[#A885FF]">/win</code> using our SDKs.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-[#0B1020] border border-[#233252]">
-              <span className="text-3xl font-bold font-display text-[#20C997]">03</span>
-              <h4 className="font-bold text-white text-sm mt-2">Go Live in Production</h4>
-              <p className="text-xs text-[#98A5BF] mt-1.5">
-                Pass automated webhook validation, submit KYC for compliance signoff, and receive your live production keys.
-              </p>
+            <div className="mx-auto max-w-xl rounded-xl border border-[#233252] bg-[#121A2D] px-5 py-4 mt-8" aria-live="polite">
+              <div className="text-xs text-[#98A5BF]">Backend catalog status</div>
+              {loading ? <div role="status" className="mt-1 text-white font-semibold">Loading catalog…</div>
+                : error ? <div className="mt-2 text-sm text-[#FFB547]" role="alert">Catalog unavailable: {error} <button onClick={refresh} className="inline-flex items-center gap-1 ml-2 text-[#00D4FF] underline"><RefreshCw size={13}/> Retry</button></div>
+                : <div className="mt-1 text-white text-xl font-bold">{games.length} enabled {games.length === 1 ? 'game' : 'games'}</div>}
+              <div className="text-xs text-[#64748B] mt-2">Counts reflect the API response, not a claim of launch readiness or uptime.</div>
             </div>
           </div>
+        </section>
 
-          <div className="text-center mt-12">
-            <Link to="/operator/register">
-              <Button variant="cyan" size="lg" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Create Free Operator Sandbox Account
-              </Button>
-            </Link>
+        <section id="games" className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+          <div className="flex justify-between items-end gap-4 mb-6">
+            <div><h2 className="text-2xl font-bold text-white font-display">Available titles</h2><p className="text-[#98A5BF] text-xs mt-2">Only games returned by the live catalog API are listed.</p></div>
+            <Link to="/games" className="text-[#00D4FF] text-sm hover:underline">Player game catalog →</Link>
           </div>
-        </div>
-      </section>
+          {!loading && !error && games.length === 0 && <p role="status" className="p-6 border border-[#233252] rounded-xl text-[#98A5BF]">No games are currently enabled by the provider.</p>}
+          {error && <p className="p-6 border border-[#233252] rounded-xl text-[#98A5BF]">Games cannot be shown until the catalog API responds successfully.</p>}
+          {loading && <p role="status" className="p-6 text-[#98A5BF]">Loading games…</p>}
+          {!loading && !error && games.length > 0 && <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {games.map(game => <Link to={`/play/${game.gameId}`} key={game.gameId} className="flex items-center gap-3 p-4 rounded-2xl border border-[#233252] bg-[#121A2D] hover:border-[#00D4FF]/60 transition-colors min-w-0">
+              <img src={getCatalogArtwork(game.gameId).icon ?? undefined} alt={`${game.name} icon`} className="w-12 h-12 rounded-xl object-contain shrink-0" loading="lazy"/>
+              <span className="min-w-0"><span className="block text-white font-semibold text-sm break-words">{game.name}</span><span className="text-[#98A5BF] text-xs">View game details</span></span>
+            </Link>)}
+          </div>}
+        </section>
 
-      {/* Footer */}
-      <footer className="mt-auto border-t border-[#233252] bg-[#0B1020] py-8 px-6 text-xs text-[#98A5BF]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-display font-bold text-white">
-            <Building2 className="w-4 h-4 text-[#00D4FF]" />
-            <span>NEXUS OPERATOR SAAS PLATFORM</span>
+        <section className="bg-[#121A2D]/60 border-y border-[#233252] px-4 sm:px-6 py-14">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-8">How operator onboarding works</h2>
+            <div className="grid md:grid-cols-3 gap-5">
+              {[
+                { icon: Building2, title: '1. Register', description: 'Submit your operator account details. A new account starts in pending approval.' },
+                { icon: ShieldCheck, title: '2. Obtain approval', description: 'An administrator reviews your account. Approval does not automatically issue partner API keys.' },
+                { icon: LockKeyhole, title: '3. Configure sandbox', description: 'An administrator provisions access to selected games. Game adapters and sandbox wallet integration must pass separate checks.' },
+              ].map(step => <article key={step.title} className="rounded-2xl bg-[#0B1020] border border-[#233252] p-6 space-y-3">
+                <step.icon className="text-[#00D4FF]" size={24}/><h3 className="font-bold">{step.title}</h3><p className="text-[#98A5BF] text-xs leading-relaxed">{step.description}</p>
+              </article>)}
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center mt-7 text-xs text-[#98A5BF]"><Wallet size={16}/><span>Live-money settlement, guaranteed SLA, instant key issuance, and third-party studios are not advertised as active features.</span><Gamepad2 size={16}/></div>
           </div>
-          <p>© 2026 Nexus Provider Aggregation Technologies. Licensed iGaming SaaS.</p>
-        </div>
-      </footer>
+        </section>
+      </main>
+      <footer className="px-6 py-6 border-t border-[#233252] text-[#98A5BF] text-xs text-center">Game Provider · Sandbox integration portal · <Link to="/operator/docs" className="text-[#00D4FF]">API documentation</Link></footer>
     </div>
   );
 };

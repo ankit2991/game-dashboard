@@ -4,9 +4,7 @@ import {
   User,
   Wallet,
   Coins,
-  Heart,
   Trophy,
-  Shield,
   HelpCircle,
   LogOut,
   Gamepad2,
@@ -29,9 +27,7 @@ export const PlayerDashboardLayout: React.FC = () => {
     { label: 'Account Overview', path: '/player/profile', icon: User },
     { label: 'Sandbox Wallet', path: '/player/wallet', icon: Wallet, highlight: true },
     { label: 'Provider Transactions', path: '/player/transactions', icon: Coins },
-    { label: 'My Favorite Games', path: '/player/favorites', icon: Heart },
     { label: 'Global Leaderboard', path: '/leaderboard', icon: Trophy },
-    { label: 'Security & 2FA', path: '/player/security', icon: Shield },
   ];
 
   return (

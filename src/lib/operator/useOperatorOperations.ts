@@ -11,7 +11,7 @@ export function useOperatorOperations<T>(load: (token: string, signal: AbortSign
   const refresh = useCallback(() => setRevision(x => x + 1), []);
   useEffect(() => {
     const ctrl = new AbortController();
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setData(null);
     void (async () => {
       const token = await getOperatorAccessToken();
       if (!token) throw new Error('Operator login required.');

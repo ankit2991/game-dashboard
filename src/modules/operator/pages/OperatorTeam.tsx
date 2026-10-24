@@ -33,7 +33,7 @@ export const OperatorTeam: React.FC = () => {
       {error && <p role="alert" className="text-[#FF5D73] text-xs mt-3">{error}</p>}
     </Card>
     <Card><h2 className="text-white font-semibold mb-3">Proposed members ({data?.members.length ?? 0})</h2>
-      {loading ? <p className="text-[#98A5BF]">Loading roster…</p> : !data?.members.length ? <p className="text-[#98A5BF] text-sm">No roster entries saved.</p> :
+      {loading ? <p role="status" className="text-[#98A5BF]">Loading roster…</p> : error ? <p className="text-[#FF5D73] text-sm">Roster unavailable. <button type="button" className="underline" onClick={refresh}>Retry</button></p> : !data?.members.length ? <p className="text-[#98A5BF] text-sm">No roster entries saved.</p> :
         <div className="space-y-2">{data.members.map(m => <div key={m.id} className="flex gap-3 items-center justify-between border-t border-[#233252] pt-3 text-sm"><div><p className="text-white">{m.name} · {m.role}</p><p className="text-[#98A5BF] text-xs">{m.email} · Draft (no access)</p></div><Button size="sm" variant="danger" disabled={busy} onClick={() => void remove(m.id)}>Remove</Button></div>)}</div>}
     </Card>
   </div>;
