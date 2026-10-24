@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
       port: 5175,
       host: true,
       // Do not make Vite an unrestricted cross-origin relay on the LAN.
-      cors: { origin: DEV_BROWSER_ORIGINS },
+      cors: { origin: [...DEV_BROWSER_ORIGINS] },
       proxy: {
         '/api': {
           target: backend,
