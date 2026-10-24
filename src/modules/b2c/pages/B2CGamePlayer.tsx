@@ -109,7 +109,7 @@ export const B2CGamePlayer: React.FC = () => {
           {launchError && <div role="alert" className="border border-red-500/40 bg-red-500/10 rounded-xl p-4 text-sm text-red-300">{launchError} <button type="button" onClick={() => { setLaunchError(null); void startGame(failedMode); }} className="underline ml-2">Retry launch</button></div>}
           {launch && <div role="status" className="rounded-xl bg-[#162A29] border border-emerald-700/40 p-5 space-y-3">
             <p className="text-white font-semibold">{launch.mode === 'demo' ? 'Demo is ready' : 'Sandbox launch ticket created'}</p>
-            <p className="text-[#98A5BF] text-xs">{launch.mode === 'demo' ? 'Opens the separately hosted demo with no real-money wallet.' : 'Open Pinball before the one-time ticket expires. The game backend must accept it before a wallet session exists.'}</p>
+            <p className="text-[#98A5BF] text-xs">{launch.mode === 'demo' ? 'Opens the separately hosted demo with no real-money wallet.' : 'Open the game before the one-time ticket expires. the game backend must accept it before a wallet session exists; a ticket alone does not prove that the game is integrated.'}</p>
             {launch.mode === 'provider' && launch.expiresAt && <p className="text-[#98A5BF] text-xs">Ticket expires: {new Date(launch.expiresAt).toLocaleString()}</p>}
             <a href={launch.launchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex gap-2 items-center px-5 py-3 rounded-xl bg-[#00D4FF] text-[#091526] font-bold text-sm">Open {launch.mode === 'demo' ? 'demo' : 'sandbox game'} <ArrowUpRight className="w-4 h-4"/></a>
           </div>}
