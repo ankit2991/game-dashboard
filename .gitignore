@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files (only examples are safe to commit)
+.env
+.env.*
+!.env.example

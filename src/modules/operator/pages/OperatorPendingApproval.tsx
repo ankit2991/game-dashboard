@@ -1,13 +1,27 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Clock, ShieldCheck, Mail, FileText, CheckCircle2, LogOut, ArrowRight, Phone } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Building2, Clock, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { useAuth } from '../../../context/AuthContext';
 
 export const OperatorPendingApproval: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, reloadOperatorStatus } = useAuth();
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const checkStatus = async () => {
+    setChecking(true);
+    setError('');
+    try {
+      const latest = await reloadOperatorStatus();
+      if (latest.status === 'approved') navigate('/operator/dashboard', { replace: true });
+      else if (latest.status !== 'pending') navigate('/access-denied', { replace: true });
+    } catch {
+      setError('Could not verify account status. Check your connection and try again.');
+    } finally { setChecking(false); }
+  };
 
   const handleLogout = () => {
     logout();
@@ -27,13 +41,13 @@ export const OperatorPendingApproval: React.FC = () => {
 
         <div className="space-y-2">
           <Badge size="md" variant="warning" dot>
-            KYC & Legal Verification in Progress
+            Application awaiting administrator review
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-black font-display text-white tracking-wide">
             Operator Account Under Review
           </h1>
           <p className="text-sm text-[#98A5BF] max-w-md mx-auto leading-relaxed">
-            Thank you for registering with NEXUS Game Provider. Your corporate aggregator application has been assigned to our compliance officer for due diligence.
+            Your registration has been received. A trusted administrator must approve your account before you can access the operator dashboard.
           </p>
         </div>
 
@@ -45,8 +59,8 @@ export const OperatorPendingApproval: React.FC = () => {
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-sm">{user?.companyName || 'Corporate Partner Ltd'}</h3>
-                <span className="text-[11px] text-[#98A5BF]">ID: {user?.id || 'usr_op_pending'}</span>
+                <h3 className="font-bold text-white text-sm">{user?.companyName || 'Operator'}</h3>
+                <span className="text-[11px] text-[#98A5BF]">ID: {user?.id || '—'}</span>
               </div>
             </div>
             <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#FFB547]/20 text-[#FFB547] border border-[#FFB547]/30">
@@ -57,34 +71,18 @@ export const OperatorPendingApproval: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-[#182238] border border-[#233252]">
               <span className="text-[10px] text-[#64748B] uppercase font-bold block mb-1">Corporate Email</span>
-              <span className="font-semibold text-white">{user?.email || 'corporate@operator.com'}</span>
+              <span className="font-semibold text-white">{user?.email || '—'}</span>
             </div>
             <div className="p-3 rounded-xl bg-[#182238] border border-[#233252]">
               <span className="text-[10px] text-[#64748B] uppercase font-bold block mb-1">Estimated SLA</span>
-              <span className="font-semibold text-[#00D4FF]">24 – 48 Business Hours</span>
+              <span className="font-semibold text-[#00D4FF]">Not guaranteed</span>
             </div>
           </div>
 
-          {/* Verification steps */}
-          <div className="pt-2 space-y-2">
-            <h4 className="text-[11px] font-bold text-[#98A5BF] uppercase tracking-wider">Compliance Checklist</h4>
-            <div className="space-y-1.5 text-xs text-[#98A5BF]">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#20C997]" />
-                <span className="text-white">Business registration & incorporation filed</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#FFB547]" />
-                <span>RNG Certification & BMM Testlabs audit review</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#64748B]" />
-                <span className="text-[#64748B]">HMAC production API credentials & IP white-listing</span>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs text-[#98A5BF]">No API keys or game access are granted automatically with an operator application.</p>
         </div>
 
+        {error && <p role="alert" className="text-xs text-[#FF5D73]">{error}</p>}
         {/* Footer Actions */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Button
@@ -96,19 +94,10 @@ export const OperatorPendingApproval: React.FC = () => {
           >
             Sign Out Operator
           </Button>
-          <a
-            href="mailto:compliance@nexus-provider.io"
-            className="w-full sm:w-auto"
-          >
-            <Button
-              variant="cyan"
-              size="md"
-              leftIcon={<Mail className="w-4 h-4" />}
-              className="w-full sm:w-auto font-bold"
-            >
-              Contact Compliance Team
-            </Button>
-          </a>
+          <Button variant="cyan" size="md" onClick={checkStatus} isLoading={checking}
+            leftIcon={<RefreshCw className="w-4 h-4" />}>
+            Check Approval Status
+          </Button>
         </div>
       </div>
     </div>

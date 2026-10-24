@@ -30,14 +30,13 @@ export const AdminLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [envMode, setEnvMode] = useState<'production' | 'staging' | 'sandbox'>('production');
 
   const navItems = [
     { label: 'Overview', path: '/admin', icon: LayoutDashboard },
-    { label: 'User Management', path: '/admin/users', icon: Users, badge: '284K' },
-    { label: 'Operator Management', path: '/admin/operators', icon: Building2, badge: '6 New' },
-    { label: 'Game Providers', path: '/admin/providers', icon: Cpu, badge: '6' },
-    { label: 'Game Management', path: '/admin/games', icon: Gamepad2, badge: '742' },
+    { label: 'User Management', path: '/admin/users', icon: Users },
+    { label: 'Operator Management', path: '/admin/operators', icon: Building2 },
+    { label: 'Game Providers', path: '/admin/providers', icon: Cpu },
+    { label: 'Game Management', path: '/admin/games', icon: Gamepad2 },
     { label: 'API Key Management', path: '/admin/api-keys', icon: KeyRound },
     { label: 'Transaction Central', path: '/admin/transactions', icon: ArrowLeftRight },
     { label: 'Reports & Analytics', path: '/admin/analytics', icon: BarChart3 },
@@ -83,26 +82,9 @@ export const AdminLayout: React.FC = () => {
             </button>
           </div>
 
-          {/* Environment Indicator Pill */}
-          {!sidebarCollapsed && (
-            <div className="px-4 pt-4">
-              <div className="bg-[#182238] border border-[#233252] rounded-xl p-2.5 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${envMode === 'production' ? 'bg-[#20C997] animate-pulse' : 'bg-[#FFB547]'}`} />
-                  <span className="font-medium text-[#98A5BF]">Environment:</span>
-                </div>
-                <select
-                  value={envMode}
-                  onChange={(e) => setEnvMode(e.target.value as any)}
-                  className="bg-[#0B1020] text-xs font-semibold text-[#00D4FF] border border-[#2D3E66] rounded-lg px-2 py-1 outline-none cursor-pointer"
-                >
-                  <option value="production">Production</option>
-                  <option value="staging">Staging</option>
-                  <option value="sandbox">Sandbox</option>
-                </select>
-              </div>
-            </div>
-          )}
+          <div className="mx-4 mt-4 rounded-lg bg-[#182238] p-2 text-xs text-[#98A5BF]">
+            <span className="text-[#20C997]">●</span> Admin session verified by Backend
+          </div>
 
           {/* Navigation Links */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -143,28 +125,10 @@ export const AdminLayout: React.FC = () => {
             })}
           </nav>
 
-          {/* System Health Status Footer */}
-          <div className="p-4 border-t border-[#233252]/80">
-            {!sidebarCollapsed ? (
-              <div className="bg-[#182238]/60 border border-[#233252] rounded-xl p-3">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-[#98A5BF] flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5 text-[#20C997]" />
-                    Engine Health
-                  </span>
-                  <span className="text-[#20C997] font-bold">99.98%</span>
-                </div>
-                <div className="w-full bg-[#0B1020] h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-gradient-to-r from-[#20C997] to-[#00D4FF] h-full w-[99.98%]" />
-                </div>
-                <p className="text-[10px] text-[#64748B] mt-1.5">Gateway cluster healthy</p>
-              </div>
-            ) : (
-              <div className="flex justify-center" title="System 99.98% Healthy">
-                <div className="w-3 h-3 rounded-full bg-[#20C997] animate-ping" />
-              </div>
-            )}
-          </div>
+          {/* Telemetry is not supplied by the backend: no simulated uptime percentage. */}
+          {!sidebarCollapsed && <div className="p-4 text-[11px] text-[#98A5BF] border-t border-[#233252]">
+            Uptime telemetry unavailable. Check the hosting provider for service metrics.
+          </div>}
         </aside>
 
         {/* Mobile Navigation Drawer */}
@@ -216,14 +180,9 @@ export const AdminLayout: React.FC = () => {
                 <Menu className="w-5 h-5" />
               </button>
 
-              <div className="relative w-full max-w-sm hidden sm:block">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-                <input
-                  type="text"
-                  placeholder="Search operators, players, games, API keys..."
-                  className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#0B1020] text-xs text-[#F5F7FF] placeholder-[#64748B] border border-[#233252] focus:border-[#7C5CFC] outline-none transition-all"
-                />
-              </div>
+              <Link to="/admin/operators" className="hidden sm:block text-xs text-[#98A5BF] hover:text-[#00D4FF]">
+                Review operator applications
+              </Link>
             </div>
 
             {/* Right: Quick Actions, Alerts, Admin User Profile */}
@@ -236,33 +195,13 @@ export const AdminLayout: React.FC = () => {
                   title="Notifications"
                 >
                   <Bell className="w-4 h-4" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#FF5D73] ring-2 ring-[#121A2D]" />
+
                 </button>
 
                 {showNotifications && (
                   <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#121A2D] border border-[#2D3E66] shadow-2xl p-4 z-50 text-xs">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#233252]">
-                      <span className="font-semibold text-white">System Alerts</span>
-                      <span className="text-[10px] text-[#A885FF] cursor-pointer hover:underline">Mark all read</span>
-                    </div>
-                    <div className="space-y-3 mt-3">
-                      <div className="p-2.5 rounded-xl bg-[#182238] border border-[#233252] flex items-start gap-2.5">
-                        <span className="w-2 h-2 rounded-full bg-[#FFB547] mt-1 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium text-white">Pending Operator Application</p>
-                          <p className="text-[#98A5BF] text-[11px]">CyberTech Gaming Ventures submitted KYC papers.</p>
-                          <span className="text-[10px] text-[#64748B]">12m ago</span>
-                        </div>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-[#182238] border border-[#233252] flex items-start gap-2.5">
-                        <span className="w-2 h-2 rounded-full bg-[#20C997] mt-1 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium text-white">Gateway Spike Absorbed</p>
-                          <p className="text-[#98A5BF] text-[11px]">Pragmatic Nexus handled 1.8M req/hr cleanly.</p>
-                          <span className="text-[10px] text-[#64748B]">45m ago</span>
-                        </div>
-                      </div>
-                    </div>
+                    <div className="font-semibold text-white border-b border-[#233252] pb-3">System Alerts</div>
+                    <p className="text-[#98A5BF] mt-3">No verified real-time alert feed is configured. Review pending operators from the Operator Management page.</p>
                   </div>
                 )}
               </div>
@@ -273,13 +212,11 @@ export const AdminLayout: React.FC = () => {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-[#182238] border border-transparent hover:border-[#233252] transition-all"
                 >
-                  <img
-                    src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"}
-                    alt="Admin Avatar"
-                    className="w-8 h-8 rounded-lg object-cover ring-2 ring-[#7C5CFC]/40"
-                  />
+                  <span className="w-8 h-8 rounded-lg bg-[#7C5CFC]/20 flex items-center justify-center ring-2 ring-[#7C5CFC]/40">
+                    <ShieldCheck className="w-4 h-4 text-[#A885FF]" />
+                  </span>
                   <div className="hidden sm:flex flex-col text-left">
-                    <span className="text-xs font-semibold text-white">{user?.name || 'Alex Mercer'}</span>
+                    <span className="text-xs font-semibold text-white">{user?.name || 'Administrator'}</span>
                     <span className="text-[10px] text-[#A885FF] font-medium">Root Admin</span>
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-[#98A5BF]" />
@@ -288,7 +225,7 @@ export const AdminLayout: React.FC = () => {
                 {showProfileMenu && (
                   <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#121A2D] border border-[#2D3E66] shadow-2xl p-2 z-50 text-xs">
                     <div className="px-3 py-2 border-b border-[#233252]">
-                      <p className="font-semibold text-white truncate">{user?.email || 'alex.mercer@nexus-provider.io'}</p>
+                      <p className="font-semibold text-white truncate">{user?.email || 'Unknown administrator'}</p>
                       <p className="text-[10px] text-[#20C997]">Role: Super Administrator</p>
                     </div>
                     <Link

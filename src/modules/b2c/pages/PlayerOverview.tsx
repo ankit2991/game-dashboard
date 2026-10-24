@@ -1,258 +1,145 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  User,
-  Wallet,
-  Coins,
-  TrendingUp,
-  Trophy,
-  ShieldCheck,
-  Edit2,
-  Play,
-  Heart,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  Flame,
-  Plus
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { UserRound, Edit2, Play, Wallet, Trophy, CalendarDays, Shield } from 'lucide-react';
+import { useAuth } from '../../../context/AuthContext';
 import { Card, CardHeader } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
-import { mockGames } from '../../../data/mock/gamesData';
-import { mockTransactions } from '../../../data/mock/adminData';
+import { useProviderCatalog } from '../../../lib/catalog/useProviderCatalog';
+import type { PlayerProfile } from '../../../lib/api/player';
+
+function memberSince(value: string | undefined) {
+  if (!value || !Number.isFinite(Date.parse(value))) return 'Not available';
+  return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}
 
 export const PlayerOverview: React.FC = () => {
-  const navigate = useNavigate();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [playerName, setPlayerName] = useState('Raymond Chen');
-  const [playerEmail, setPlayerEmail] = useState('raymond.chen@gmail.com');
-  const [playerPhone, setPlayerPhone] = useState('+60 17-882 1940');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { user, loadPlayerProfile, updatePlayerProfile } = useAuth();
+  const catalog = useProviderCatalog();
+  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [locale, setLocale] = useState('en');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    loadPlayerProfile().then(result => { if (active) setProfile(result); })
+      .catch((cause: unknown) => {
+        if (active) { setProfile(null); setError(cause instanceof Error ? cause.message : 'Unable to load profile.'); }
+      }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [loadPlayerProfile, revision]);
+
+  const openEdit = () => {
+    if (!profile) return;
+    setDisplayName(profile.displayName);
+    setLocale(profile.locale);
+    setEditError(null);
+    setEditing(true);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsEditModalOpen(false);
-    showToast('Profile information saved successfully.');
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setEditError(null);
+    const name = displayName.trim();
+    if (name.length < 1 || name.length > 60 || !/^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){0,3}$/.test(locale)) {
+      setEditError('Enter a display name (1–60 characters) and a valid locale (e.g. en or zh-CN).');
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await updatePlayerProfile({ displayName: name, locale });
+      setProfile(updated);
+      setEditing(false);
+      setNotice('Your profile was updated on the server.');
+    } catch (cause) {
+      setEditError(cause instanceof Error ? cause.message : 'Unable to update profile.');
+    } finally { setSaving(false); }
   };
 
-  const favoriteGames = mockGames.slice(0, 3);
-  const playerTxs = mockTransactions.filter((tx) => tx.userId === 'usr_882194').slice(0, 3);
+  if (loading) return <div role="status" className="text-[#98A5BF] p-8">Loading your account from the backend…</div>;
+  if (error || !profile) return (
+    <Card><div role="alert" className="space-y-3 p-6">
+      <p className="text-white font-bold">Account details are unavailable</p>
+      <p className="text-sm text-[#FFB547]">{error || 'Could not verify your profile.'}</p>
+      <Button variant="outline" onClick={() => setRevision(i => i + 1)}>Try again</Button>
+    </div></Card>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="fixed top-14 right-6 z-50 bg-[#20C997] text-[#0B1020] px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Profile Banner */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#182238] via-[#1F2C49] to-[#182238] border border-[#2D3E66] shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <img
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=160&auto=format&fit=crop&q=80"
-            alt="Raymond"
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover ring-4 ring-[#7C5CFC]/40 shadow-2xl flex-shrink-0"
-          />
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-bold font-display text-white">{playerName}</h1>
-              <Badge variant="success" size="sm" dot>Verified KYC</Badge>
-            </div>
-            <p className="text-xs text-[#00D4FF] font-mono mt-0.5">@raymond_vip99 • Member since August 2023</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-[#7C5CFC]/20 text-[#A885FF] border border-[#7C5CFC]/40 font-semibold">
-                VIP Platinum Level 4
-              </span>
-              <span className="text-[11px] text-[#98A5BF]">Next Tier: 72% XP</span>
-            </div>
+      {notice && <div role="status" className="rounded-xl p-3 border border-[#20C997]/50 text-[#20C997] text-sm flex justify-between gap-3">{notice}<button type="button" onClick={() => setNotice(null)} aria-label="Dismiss notification">×</button></div>}
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-[#182238] via-[#1F2C49] to-[#182238] border border-[#2D3E66] flex flex-col sm:flex-row justify-between gap-5 items-start sm:items-center">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-16 h-16 rounded-2xl bg-[#7C5CFC]/20 border border-[#7C5CFC]/40 flex-shrink-0 flex items-center justify-center"><UserRound className="w-8 h-8 text-[#A885FF]" /></div>
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-white break-words">{profile.displayName}</h1>
+            <p className="text-xs text-[#00D4FF] break-all">@{profile.username}</p>
+            <p className="text-xs text-[#98A5BF] break-all">{profile.email}</p>
           </div>
         </div>
+        <Button variant="outline" size="sm" leftIcon={<Edit2 className="w-4 h-4" />} onClick={openEdit}>Edit Profile</Button>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Edit2 className="w-3.5 h-3.5" />}
-            onClick={() => setIsEditModalOpen(true)}
-          >
-            Edit Profile
-          </Button>
-          <Link to="/player/wallet">
-            <Button
-              variant="cyan"
-              size="sm"
-              leftIcon={<Plus className="w-3.5 h-3.5" />}
-            >
-              Deposit Funds
-            </Button>
-          </Link>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-[#121A2D] border border-[#233252] p-5 rounded-2xl">
+          <p className="text-xs text-[#98A5BF] flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Member since</p>
+          <p className="font-bold text-white mt-2">{memberSince(profile.createdAt)}</p>
+        </div>
+        <div className="bg-[#121A2D] border border-[#233252] p-5 rounded-2xl">
+          <p className="text-xs text-[#98A5BF] flex items-center gap-2"><Shield className="w-4 h-4" /> Account</p>
+          <p className="font-bold text-white mt-2">B2C Player</p>
+          <p className="text-xs text-[#64748B] mt-1">KYC status not provided by the backend</p>
+        </div>
+        <div className="bg-[#121A2D] border border-[#233252] p-5 rounded-2xl">
+          <p className="text-xs text-[#98A5BF] flex items-center gap-2"><Wallet className="w-4 h-4" /> Wallet & statistics</p>
+          <p className="font-bold text-[#FFB547] mt-2">Sandbox ledger</p>
+          <p className="text-xs text-[#64748B] mt-1">Verified balance unavailable; read-only transaction history available if operator configured</p>
         </div>
       </div>
 
-      {/* 4 Player Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-[#121A2D] border border-[#233252]">
-          <span className="text-[11px] text-[#98A5BF] uppercase font-semibold flex items-center gap-1.5">
-            <Wallet className="w-3.5 h-3.5 text-[#00D4FF]" /> Available Balance
-          </span>
-          <p className="text-2xl font-bold font-mono text-[#00D4FF] mt-1.5">MYR 8,420.50</p>
-          <span className="text-[10px] text-[#20C997]">Withdrawable instantly</span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#121A2D] border border-[#233252]">
-          <span className="text-[11px] text-[#98A5BF] uppercase font-semibold flex items-center gap-1.5">
-            <Coins className="w-3.5 h-3.5 text-[#FFB547]" /> Total Wagered
-          </span>
-          <p className="text-2xl font-bold font-mono text-white mt-1.5">MYR 142,800</p>
-          <span className="text-[10px] text-[#98A5BF]">1,482 game spins</span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#121A2D] border border-[#233252]">
-          <span className="text-[11px] text-[#98A5BF] uppercase font-semibold flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5 text-[#20C997]" /> Total Won
-          </span>
-          <p className="text-2xl font-bold font-mono text-[#20C997] mt-1.5">MYR 138,940</p>
-          <span className="text-[10px] text-[#20C997]">97.3% Player RTP</span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-[#121A2D] border border-[#233252]">
-          <span className="text-[11px] text-[#98A5BF] uppercase font-semibold flex items-center gap-1.5">
-            <Trophy className="w-3.5 h-3.5 text-[#A885FF]" /> Global Ranking
-          </span>
-          <p className="text-2xl font-bold font-mono text-white mt-1.5">#14</p>
-          <span className="text-[10px] text-[#A885FF]">Top 1% Tournament</span>
-        </div>
-      </div>
-
-      {/* Two Column Grid: Favorite Games & Recent Transactions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Favorite Games Card */}
         <Card>
-          <CardHeader
-            title="My Favorite Games"
-            subtitle="Quick launch your most played titles"
-            action={
-              <Link to="/games" className="text-xs text-[#00D4FF] hover:underline font-semibold">
-                Explore More →
+          <CardHeader title="Available Games" subtitle="Live catalog from the Game Provider" action={<Link to="/games" className="text-xs text-[#00D4FF] hover:underline">All games →</Link>} />
+          {catalog.loading ? <p className="text-sm text-[#98A5BF]">Loading games…</p>
+            : catalog.error ? <p role="alert" className="text-sm text-[#FFB547]">{catalog.error}</p>
+            : catalog.games.length === 0 ? <p className="text-sm text-[#98A5BF]">No games are currently available.</p>
+            : <div className="space-y-2">{catalog.games.slice(0, 4).map(game => (
+              <Link to={`/play/${game.gameId}`} key={game.gameId} className="flex justify-between items-center gap-2 p-3 rounded-xl border border-[#233252] hover:border-[#7C5CFC] bg-[#121A2D]">
+                <span className="font-semibold text-white text-sm">{game.name}</span><Play className="w-4 h-4 text-[#00D4FF]" />
               </Link>
-            }
-          />
-
-          <div className="space-y-3">
-            {favoriteGames.map((game) => (
-              <div
-                key={game.id}
-                onClick={() => navigate(`/play/${game.id}`)}
-                className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] hover:border-[#7C5CFC]/40 transition-all cursor-pointer flex items-center justify-between gap-3 group"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <img
-                    src={game.thumbnail}
-                    alt={game.title}
-                    className="w-12 h-12 rounded-xl object-cover border border-[#2D3E66] flex-shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-bold text-white text-xs truncate group-hover:text-[#00D4FF]">{game.title}</p>
-                    <span className="text-[11px] text-[#98A5BF]">{game.providerName} • RTP: {game.rtp}%</span>
-                  </div>
-                </div>
-
-                <Button variant="primary" size="sm" leftIcon={<Play className="w-3 h-3 fill-current" />}>
-                  Play
-                </Button>
-              </div>
-            ))}
-          </div>
+            ))}</div>}
         </Card>
-
-        {/* Recent Game Activity Ledger */}
         <Card>
-          <CardHeader
-            title="Recent Activity & Game Spins"
-            subtitle="Real-time session outcomes"
-            action={
-              <Link to="/player/transactions" className="text-xs text-[#00D4FF] hover:underline font-semibold">
-                Full Statement →
-              </Link>
-            }
-          />
-
-          <div className="space-y-3">
-            {playerTxs.map((tx) => (
-              <div
-                key={tx.id}
-                className="p-3 rounded-xl bg-[#121A2D] border border-[#233252] flex items-center justify-between text-xs"
-              >
-                <div>
-                  <p className="font-semibold text-white">{tx.gameTitle || tx.type.toUpperCase()}</p>
-                  <span className="text-[10px] text-[#64748B] font-mono">{tx.timestamp}</span>
-                </div>
-
-                <div className="text-right">
-                  <span className={`font-mono font-bold ${tx.type === 'win' ? 'text-[#20C997]' : 'text-white'}`}>
-                    {tx.type === 'win' ? '+' : '-'} {tx.currency} {tx.amount.toFixed(2)}
-                  </span>
-                  <Badge variant={tx.status === 'completed' ? 'success' : 'warning'} size="sm" className="ml-2">
-                    {tx.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
+          <CardHeader title="Account Activity" subtitle="Authenticated account status" />
+          <p className="text-sm text-[#98A5BF] mb-4">Your account profile does not include an authoritative wallet balance or gameplay statistics. Provider transactions, if available, are read separately from the sandbox ledger.</p>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/leaderboard"><Button variant="outline" size="sm" leftIcon={<Trophy className="w-4 h-4" />}>Public Leaderboard</Button></Link>
+            <Link to="/player/wallet"><Button variant="outline" size="sm" leftIcon={<Wallet className="w-4 h-4" />}>Sandbox Wallet</Button></Link>
           </div>
+          <p className="text-xs text-[#64748B] mt-4">Public game rankings do not identify individual B2C accounts.</p>
         </Card>
       </div>
 
-      {/* Edit Profile Modal */}
-      {isEditModalOpen && (
-        <Modal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          title="Edit Player Profile"
-          maxWidth="md"
-          footer={
-            <div className="flex items-center justify-end gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleSaveProfile}>
-                Save Changes
-              </Button>
-            </div>
-          }
-        >
-          <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
-            <Input
-              label="Full Name"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              required
-            />
-            <Input
-              label="Email Address"
-              value={playerEmail}
-              onChange={(e) => setPlayerEmail(e.target.value)}
-              required
-            />
-            <Input
-              label="Phone Number"
-              value={playerPhone}
-              onChange={(e) => setPlayerPhone(e.target.value)}
-              required
-            />
-          </form>
-        </Modal>
-      )}
+      {editing && <Modal isOpen={editing} onClose={() => { if (!saving) setEditing(false); }} title="Edit Player Profile" maxWidth="md"
+        footer={<div className="flex justify-end gap-2 w-full"><Button variant="outline" size="sm" disabled={saving} onClick={() => setEditing(false)}>Cancel</Button><Button form="edit-player-profile" type="submit" variant="primary" size="sm" isLoading={saving}>Save Changes</Button></div>}>
+        <form id="edit-player-profile" onSubmit={handleSave} className="space-y-4">
+          <Input label="Display Name" value={displayName} onChange={event => setDisplayName(event.target.value)} maxLength={60} required />
+          <Input label="Locale" value={locale} onChange={event => setLocale(event.target.value)} placeholder="en" required />
+          <Input label="Email (read-only)" value={profile.email} disabled helperText="Email changes are not supported by this API." />
+          <Input label="Username (read-only)" value={profile.username} disabled />
+          {editError && <p role="alert" className="text-xs text-[#FF5D73]">{editError}</p>}
+        </form>
+      </Modal>}
     </div>
   );
 };

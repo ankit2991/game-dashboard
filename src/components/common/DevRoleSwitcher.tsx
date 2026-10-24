@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Building2, Gamepad2, Clock, LogOut, ChevronUp, ChevronDown, Wrench } from 'lucide-react';
+import { ShieldCheck, Gamepad2, LogOut, ChevronUp, ChevronDown, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { DevConnectionStatus } from './DevConnectionStatus';
 
 /**
  * DevRoleSwitcher
@@ -44,41 +45,19 @@ export const DevRoleSwitcher: React.FC = () => {
             )}
           </div>
 
+          <DevConnectionStatus />
+
           <div className="space-y-1">
-            <button
-              onClick={() => {
-                loginAs('super_admin');
-                navigate('/admin');
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-white hover:bg-[#7C5CFC]/20 hover:text-[#A885FF] transition-colors"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#7C5CFC]" />
-              <span>Test as Super Admin</span>
+            <button type="button" onClick={() => { navigate('/admin/login'); setIsOpen(false); }}
+              className="w-full flex gap-2 px-2.5 py-1.5 text-[#A885FF] hover:bg-[#7C5CFC]/20 rounded-lg">
+              <ShieldCheck className="w-4 h-4"/>Admin sign-in (real API)
             </button>
 
             <button
-              onClick={() => {
-                loginAs('operator', { approvalStatus: 'approved' });
-                navigate('/operator/dashboard');
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-white hover:bg-[#00D4FF]/20 hover:text-[#00D4FF] transition-colors"
+              onClick={() => { navigate('/operator/login'); setIsOpen(false); }}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-[#00D4FF] hover:bg-[#00D4FF]/10"
             >
-              <Building2 className="w-3.5 h-3.5 text-[#00D4FF]" />
-              <span>Test as Approved Operator</span>
-            </button>
-
-            <button
-              onClick={() => {
-                loginAs('operator', { approvalStatus: 'pending' });
-                navigate('/operator/pending-approval');
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-white hover:bg-[#FFB547]/20 hover:text-[#FFB547] transition-colors"
-            >
-              <Clock className="w-3.5 h-3.5 text-[#FFB547]" />
-              <span>Test as Pending Operator</span>
+              <span>Operator sign-in (real API)</span>
             </button>
 
             <button

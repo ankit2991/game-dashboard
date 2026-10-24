@@ -27,8 +27,8 @@ export const PlayerDashboardLayout: React.FC = () => {
 
   const playerNavItems = [
     { label: 'Account Overview', path: '/player/profile', icon: User },
-    { label: 'Deposit & Wallet', path: '/player/wallet', icon: Wallet, highlight: true },
-    { label: 'Game Bets & Ledger', path: '/player/transactions', icon: Coins },
+    { label: 'Sandbox Wallet', path: '/player/wallet', icon: Wallet, highlight: true },
+    { label: 'Provider Transactions', path: '/player/transactions', icon: Coins },
     { label: 'My Favorite Games', path: '/player/favorites', icon: Heart },
     { label: 'Global Leaderboard', path: '/leaderboard', icon: Trophy },
     { label: 'Security & 2FA', path: '/player/security', icon: Shield },
@@ -54,7 +54,7 @@ export const PlayerDashboardLayout: React.FC = () => {
                   <span className="font-display font-bold text-sm tracking-wide text-white">
                     NEXUS <span className="text-[#00D4FF]">PLAYER</span>
                   </span>
-                  <span className="text-[10px] text-[#98A5BF]">VIP Portal</span>
+                  <span className="text-[10px] text-[#98A5BF]">Player Portal</span>
                 </div>
               )}
             </Link>
@@ -77,10 +77,10 @@ export const PlayerDashboardLayout: React.FC = () => {
                   className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#7C5CFC]/40"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-white text-xs truncate">{user?.name || 'Raymond Chen'}</p>
-                  <p className="text-[10px] text-[#00D4FF] font-mono">@{user?.email?.split('@')[0] || 'raymond_vip99'}</p>
+                  <p className="font-bold text-white text-xs truncate">{user?.name || 'Player'}</p>
+                  <p className="text-[10px] text-[#00D4FF] font-mono">@{user?.username || user?.email?.split('@')[0] || 'player'}</p>
                   <span className="text-[10px] text-[#20C997] font-semibold block mt-0.5">
-                    ● {user?.vipTier || 'Platinum Tier'}
+                    ● Sandbox account
                   </span>
                 </div>
               </div>
@@ -176,7 +176,7 @@ export const PlayerDashboardLayout: React.FC = () => {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#182238] border border-[#2D3E66] text-xs font-mono font-bold text-[#00D4FF]"
               >
                 <Wallet className="w-3.5 h-3.5 text-[#20C997]" />
-                <span>MYR {user?.walletBalance !== undefined ? user.walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '8,420.50'}</span>
+                <span>Balance unavailable</span>
               </Link>
 
               <Link

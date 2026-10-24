@@ -18,7 +18,6 @@ import {
   Coins,
   LogOut,
   ExternalLink,
-  Plus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Badge } from '../components/ui/Badge';
@@ -27,19 +26,16 @@ import { Button } from '../components/ui/Button';
 export const B2CLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout, updateBalance } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const isPlayer = isAuthenticated && user?.role === 'player';
-  const playerBalance = user?.walletBalance !== undefined ? user.walletBalance : 8420.50;
-  const currency = user?.currency || 'MYR';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const navLinks = [
     { label: 'Home', path: '/' },
     { label: 'All Games', path: '/games' },
-    { label: 'Slots', path: '/games?category=slots' },
-    { label: 'Crash & Arcade', path: '/games?category=arcade' },
-    { label: 'Live Casino', path: '/games?category=live' },
+    { label: 'Single Player', path: '/games?mode=single_player' },
+    { label: 'Multiplayer', path: '/games?mode=multiplayer' },
     { label: 'Leaderboard', path: '/leaderboard' },
     { label: 'Promotions', path: '/promotions' },
   ];
@@ -51,22 +47,22 @@ export const B2CLayout: React.FC = () => {
         <div className="w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-1.5 mx-auto text-[10px] sm:text-xs truncate">
             <span className="flex items-center gap-1 text-[#FFB547] font-bold uppercase tracking-wider flex-shrink-0">
-              <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FFB547] animate-pulse" /> Hot Event:
+              <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FFB547] animate-pulse" /> Catalog:
             </span>
             <span className="text-white font-medium truncate">
-              Weekly $100,000 Multiplier Tournament Live on Pragmatic & Spribe Games!
+              Explore our available games in the live Game Provider catalog.
             </span>
-            <Link to="/promotions" className="text-[#00D4FF] hover:underline font-bold ml-1 hidden sm:inline flex-shrink-0">
-              Claim Bonus →
+            <Link to="/games" className="text-[#00D4FF] hover:underline font-bold ml-1 hidden sm:inline flex-shrink-0">
+              Explore Games →
             </Link>
           </div>
 
           <div className="hidden lg:flex items-center gap-3 text-[11px] text-[#98A5BF] flex-shrink-0">
             <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#20C997]" /> Provably Fair & RNG Certified
+              <ShieldCheck className="w-3.5 h-3.5 text-[#20C997]" /> Game catalog powered by API
             </span>
             <span className="text-[#2D3E66]">|</span>
-            <span className="text-[#A885FF]">24/7 Live Support</span>
+            <span className="text-[#A885FF]">Sandbox development</span>
           </div>
         </div>
       </div>
@@ -85,7 +81,7 @@ export const B2CLayout: React.FC = () => {
                   NEXUS <span className="text-[#00D4FF]">PLAY</span>
                 </span>
                 <span className="text-[9px] text-[#98A5BF] tracking-widest uppercase font-semibold mt-1 hidden sm:block">
-                  Casino & Crash Hub
+                  Game Provider Catalog
                 </span>
               </div>
             </Link>
@@ -111,7 +107,7 @@ export const B2CLayout: React.FC = () => {
             </nav>
           </div>
 
-          {/* Right: Search, Balance/Login, Profile Controls */}
+          {/* Right: Search, Wallet/Login, Profile Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
             {/* Search Input Bar (Desktop & Tablet only) */}
             <Link
@@ -120,30 +116,30 @@ export const B2CLayout: React.FC = () => {
             >
               <div className="flex items-center gap-2 overflow-hidden">
                 <Search className="w-3.5 h-3.5 text-[#64748B] group-hover:text-[#00D4FF] transition-colors flex-shrink-0" />
-                <span className="text-[#64748B] text-xs truncate">Search 700+ games...</span>
+                <span className="text-[#64748B] text-xs truncate">Explore available games...</span>
               </div>
-              <kbd className="hidden xl:inline-block text-[10px] bg-[#233252] px-1.5 py-0.5 rounded text-[#98A5BF] font-mono border border-[#2D3E66]">⌘K</kbd>
+
             </Link>
 
             {isPlayer ? (
               <div className="flex items-center gap-1.5 sm:gap-2.5">
-                {/* Mobile Balance Pill (Compact, visible on < sm) */}
+                {/* Mobile Wallet Status Pill (Compact, visible on < sm) */}
                 <Link
                   to="/player/wallet"
                   className="h-8.5 sm:hidden px-2 rounded-lg bg-[#182238] border border-[#2D3E66] flex items-center gap-1.5 text-xs font-mono font-bold text-white select-none"
                   title="View Player Wallet"
                 >
                   <Wallet className="w-3.5 h-3.5 text-[#20C997] flex-shrink-0" />
-                  <span className="text-[11px] text-[#00D4FF]">8,420</span>
+                  <span className="text-[11px] text-[#00D4FF]">—</span>
                 </Link>
 
-                {/* Mobile Quick Deposit Button (Visible on < sm) */}
+                {/* Mobile Wallet Shortcut (Visible on < sm) */}
                 <Link to="/player/wallet" className="sm:hidden">
                   <button
                     className="h-8.5 px-2.5 rounded-lg bg-gradient-to-r from-[#00D4FF] to-[#00B4D8] hover:brightness-110 active:scale-95 text-[#0B1020] font-bold text-xs flex items-center gap-1 shadow-md shadow-[#00D4FF]/20 transition-all select-none"
                   >
-                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Deposit</span>
+                    <Wallet className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Wallet</span>
                   </button>
                 </Link>
 
@@ -160,7 +156,7 @@ export const B2CLayout: React.FC = () => {
                     <div className="flex flex-col text-left justify-center">
                       <span className="text-[9px] text-[#98A5BF] uppercase tracking-wider font-semibold leading-none">Balance</span>
                       <span className="font-mono font-bold text-xs text-white group-hover:text-[#00D4FF] mt-0.5 leading-none">
-                        <span className="text-[#00D4FF]">{currency}</span> {playerBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        Unavailable
                       </span>
                     </div>
                   </Link>
@@ -169,8 +165,8 @@ export const B2CLayout: React.FC = () => {
                     <button
                       className="h-8 px-3 rounded-lg bg-gradient-to-r from-[#00D4FF] to-[#00B4D8] hover:brightness-110 active:scale-95 text-[#0B1020] font-bold text-xs flex items-center gap-1 shadow-md shadow-[#00D4FF]/20 transition-all select-none"
                     >
-                      <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                      <span>Deposit</span>
+                      <Wallet className="w-3.5 h-3.5 stroke-[3]" />
+                      <span>Wallet</span>
                     </button>
                   </Link>
                 </div>
@@ -190,8 +186,8 @@ export const B2CLayout: React.FC = () => {
                       <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#20C997] ring-1 ring-[#182238]" />
                     </div>
                     <div className="hidden xl:flex flex-col text-left justify-center">
-                      <span className="text-xs font-bold text-white group-hover:text-[#00D4FF] leading-none transition-colors">{user?.name || 'Raymond'}</span>
-                      <span className="text-[9px] text-[#FFB547] font-semibold leading-none mt-0.5">{user?.vipTier || 'VIP 4'}</span>
+                      <span className="text-xs font-bold text-white group-hover:text-[#00D4FF] leading-none transition-colors">{user?.name || 'Player'}</span>
+                      <span className="text-[9px] text-[#FFB547] font-semibold leading-none mt-0.5">Player</span>
                     </div>
                     <ChevronDown className="w-3.5 h-3.5 text-[#98A5BF] group-hover:text-white transition-colors" />
                   </button>
@@ -199,9 +195,9 @@ export const B2CLayout: React.FC = () => {
                   {showProfileMenu && (
                     <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-[#121A2D] border border-[#2D3E66] shadow-2xl p-2 z-50 text-xs animate-in fade-in zoom-in-95">
                       <div className="px-3 py-2 border-b border-[#233252]">
-                        <p className="font-bold text-white">{user?.name || 'Raymond Chen'}</p>
-                        <p className="text-[10px] text-[#00D4FF] font-mono truncate">{user?.email || 'raymond@nexus.io'}</p>
-                        <span className="text-[10px] text-[#20C997] font-medium">{user?.vipTier || 'VIP Tier: Platinum Level 4'}</span>
+                        <p className="font-bold text-white">{user?.name || 'Player'}</p>
+                        <p className="text-[10px] text-[#00D4FF] font-mono truncate">{user?.email || 'Not signed in'}</p>
+                        <span className="text-[10px] text-[#20C997] font-medium">Player Account</span>
                       </div>
                       <Link
                         to="/player/profile"
@@ -217,7 +213,7 @@ export const B2CLayout: React.FC = () => {
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-[#98A5BF] hover:text-white hover:bg-[#182238]"
                       >
                         <Wallet className="w-3.5 h-3.5" />
-                        <span>Deposit & Withdraw</span>
+                        <span>Sandbox Wallet</span>
                       </Link>
                       <Link
                         to="/player/transactions"
@@ -282,10 +278,10 @@ export const B2CLayout: React.FC = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-white leading-none">{user?.name || 'Raymond Chen'}</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#FFB547]/20 text-[#FFB547] font-semibold font-mono leading-none">{user?.vipTier || 'VIP 4'}</span>
+                      <span className="text-xs font-bold text-white leading-none">{user?.name || 'Player'}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#FFB547]/20 text-[#FFB547] font-semibold font-mono leading-none">Player</span>
                     </div>
-                    <span className="text-[10px] text-[#00D4FF] font-mono block mt-1 truncate max-w-[140px]">{user?.email || 'raymond@nexus.io'}</span>
+                    <span className="text-[10px] text-[#00D4FF] font-mono block mt-1 truncate max-w-[140px]">{user?.email || 'Not signed in'}</span>
                   </div>
                 </div>
 
@@ -304,11 +300,11 @@ export const B2CLayout: React.FC = () => {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]" />
               <input
                 type="text"
-                placeholder="Search slots, crash, live tables..."
+                placeholder="Search available games..."
                 className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#182238] border border-[#2D3E66] text-xs text-white placeholder-[#64748B] outline-none focus:border-[#7C5CFC]"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    navigate('/games');
+                    navigate(`/games?search=${encodeURIComponent(e.currentTarget.value.trim())}`);
                     setMobileMenuOpen(false);
                   }
                 }}
@@ -323,9 +319,9 @@ export const B2CLayout: React.FC = () => {
                     <Wallet className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#98A5BF] block leading-none">Total Balance</span>
+                    <span className="text-[10px] text-[#98A5BF] block leading-none">Verified Balance</span>
                     <span className="text-xs font-mono font-bold text-white leading-none mt-1 block">
-                      <span className="text-[#00D4FF]">{currency}</span> {playerBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      Unavailable
                     </span>
                   </div>
                 </div>
@@ -335,8 +331,8 @@ export const B2CLayout: React.FC = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className="px-3 py-1.5 rounded-lg bg-[#00D4FF] hover:bg-[#00B4D8] text-[#0B1020] text-xs font-bold flex items-center gap-1 shadow-sm"
                   >
-                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Deposit</span>
+                    <Wallet className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Wallet</span>
                   </Link>
                 </div>
               </div>
@@ -388,7 +384,7 @@ export const B2CLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1">
-        <Outlet context={{ isLoggedIn: isPlayer, playerBalance, setPlayerBalance: updateBalance, currency }} />
+        <Outlet context={{ isLoggedIn: isPlayer }} />
       </main>
 
       {/* Footer */}
@@ -404,12 +400,12 @@ export const B2CLayout: React.FC = () => {
                 <span className="font-display font-bold text-lg text-white">NEXUS PLAY</span>
               </div>
               <p className="text-xs text-[#98A5BF] max-w-sm leading-relaxed">
-                Premier online entertainment destination offering the highest RTP certified slots, instant crash games, and live dealer experiences powered by the Nexus Provider SaaS Engine.
+                Discover enabled games directly from the Game Provider API. Demo availability depends on individual game configuration.
               </p>
               <div className="flex items-center gap-2 pt-2">
                 <span className="px-2.5 py-1 rounded-lg bg-[#182238] border border-[#2D3E66] text-white font-bold text-[11px]">18+ ONLY</span>
-                <span className="px-2.5 py-1 rounded-lg bg-[#182238] border border-[#2D3E66] text-[#20C997] font-semibold text-[11px]">RNG CERTIFIED</span>
-                <span className="px-2.5 py-1 rounded-lg bg-[#182238] border border-[#2D3E66] text-[#00D4FF] font-semibold text-[11px]">PROVABLY FAIR</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#182238] border border-[#2D3E66] text-[#20C997] font-semibold text-[11px]">BACKEND CATALOG</span>
+                <span className="px-2.5 py-1 rounded-lg bg-[#182238] border border-[#2D3E66] text-[#00D4FF] font-semibold text-[11px]">DEMO MODE</span>
               </div>
             </div>
 
@@ -417,11 +413,9 @@ export const B2CLayout: React.FC = () => {
             <div>
               <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-3">Games Hub</h4>
               <ul className="space-y-2">
-                <li><Link to="/games?category=slots" className="hover:text-white transition-colors">Video Slots</Link></li>
-                <li><Link to="/games?category=arcade" className="hover:text-white transition-colors">Aviator & Crash</Link></li>
-                <li><Link to="/games?category=live" className="hover:text-white transition-colors">Live Dealer Roulette</Link></li>
-                <li><Link to="/games?category=card" className="hover:text-white transition-colors">VIP Blackjack</Link></li>
-                <li><Link to="/games" className="hover:text-white transition-colors">Jackpot Megaways</Link></li>
+                <li><Link to="/games?mode=single_player" className="hover:text-white transition-colors">Single Player</Link></li>
+                <li><Link to="/games?mode=multiplayer" className="hover:text-white transition-colors">Multiplayer</Link></li>
+                <li><Link to="/games" className="hover:text-white transition-colors">All Enabled Games</Link></li>
               </ul>
             </div>
 
@@ -431,7 +425,7 @@ export const B2CLayout: React.FC = () => {
               <ul className="space-y-2">
                 <li><Link to="/promotions" className="hover:text-white transition-colors">Promotions & Bonuses</Link></li>
                 <li><Link to="/leaderboard" className="hover:text-white transition-colors">VIP Leaderboard</Link></li>
-                <li><Link to="/player/wallet" className="hover:text-white transition-colors">Deposit & Withdraw</Link></li>
+                <li><Link to="/player/wallet" className="hover:text-white transition-colors">Sandbox Wallet</Link></li>
                 <li><Link to="/operator" className="text-[#00D4FF] hover:underline flex items-center gap-1">B2B Integration Portal <ExternalLink className="w-2.5 h-2.5" /></Link></li>
               </ul>
             </div>

@@ -1,38 +1,36 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Building2,
   Lock,
   Mail,
   Eye,
   EyeOff,
-  CheckCircle2,
   ArrowRight,
   Globe,
   User,
   Phone,
-  ShieldCheck,
-  Sparkles
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
 import { useAuth } from '../../../context/AuthContext';
+import { ApiError } from '../../../lib/api/client';
+import { operatorTarget } from '../../../lib/operator/operatorModel';
 
 export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ initialMode = 'login' }) => {
   const navigate = useNavigate();
-  const { loginAs, registerOperator } = useAuth();
+  const { loginOperator, registerOperator } = useAuth();
   const [searchParams] = useSearchParams();
   const modeParam = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(modeParam ? modeParam === 'login' : initialMode === 'login');
   
   // Login Form State
-  const [loginEmail, setLoginEmail] = useState('d.tan@asiagaming.net');
-  const [loginPassword, setLoginPassword] = useState('••••••••••••');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   // Registration Form State
   const [companyName, setCompanyName] = useState('');
@@ -46,51 +44,33 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   const [password, setPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError('');
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (loginEmail.includes('connor') || loginEmail.includes('pending') || loginEmail.includes('cybertech')) {
-        loginAs('operator', {
-          approvalStatus: 'pending',
-          email: loginEmail,
-          companyName: 'CyberTech Gaming Ventures',
-        });
-        navigate('/operator/pending-approval');
-      } else {
-        loginAs('operator', {
-          approvalStatus: 'approved',
-          email: loginEmail,
-          companyName: 'Asia Gaming Network Ltd',
-        });
-        navigate('/operator/dashboard');
-      }
-    }, 600);
+    try {
+      const status = await loginOperator(loginEmail, loginPassword, rememberMe);
+      navigate(operatorTarget(status), { replace: true });
+    } catch (error) {
+      setAuthError(error instanceof ApiError ? error.message : 'Sign-in failed. Please try again.');
+    } finally { setIsLoading(false); }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError('');
+    if (!termsAccepted) { setAuthError('You must accept the terms to register.'); return; }
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      registerOperator({
-        companyName: companyName || 'New Operator Aggregator',
-        email,
-        businessType
-      });
-      navigate('/operator/pending-approval');
-    }, 800);
-  };
-
-  const handleQuickDemo = (operator: 'asia' | 'pending') => {
-    if (operator === 'asia') {
-      setLoginEmail('d.tan@asiagaming.net');
-      setLoginPassword('AsiaGamingPass2026!');
-    } else {
-      setLoginEmail('s.connor@cybertech-slots.io');
-      setLoginPassword('CyberTechPass2026!');
-    }
+    try {
+      await registerOperator({
+        companyName, website, email, contactPerson, phone, country,
+        businessType, registrationNumber: regNumber,
+        password, termsAccepted: true,
+      }, rememberMe);
+      navigate('/operator/pending-approval', { replace: true });
+    } catch (error) {
+      setAuthError(error instanceof ApiError ? error.message : 'Registration failed. Please try again.');
+    } finally { setIsLoading(false); }
   };
 
   return (
@@ -113,62 +93,16 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
               <p className="text-xs text-[#98A5BF] mt-1">
                 {isLogin
                   ? 'Access game catalog licensing, manage API keys, and monitor player sessions'
-                  : 'Get instant Sandbox API credentials and integrate 700+ games'}
+                  : 'Register your company for review. API keys are not issued until separately provisioned.'}
               </p>
             </div>
 
-            {/* Quick Demo Autofill when on Login */}
-            {isLogin && !registrationSuccess && (
-              <div className="mb-6 bg-[#0B1020]/80 rounded-2xl p-3 border border-[#233252] text-xs">
-                <div className="flex items-center justify-between text-[#98A5BF] mb-2 font-medium">
-                  <span className="flex items-center gap-1.5 text-white">
-                    <Sparkles className="w-3.5 h-3.5 text-[#00D4FF]" />
-                    Demo Operator Accounts:
-                  </span>
-                  <span className="text-[10px] text-[#00D4FF]">Click to autofill</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickDemo('asia')}
-                    className="p-2 rounded-xl bg-[#182238] hover:bg-[#00D4FF]/10 text-left border border-[#2D3E66] transition-all"
-                  >
-                    <p className="font-semibold text-white text-[11px]">Asia Gaming Ltd</p>
-                    <span className="text-[10px] text-[#00D4FF]">Tier 1 Operator • 420 Games</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickDemo('pending')}
-                    className="p-2 rounded-xl bg-[#182238] hover:bg-[#FFB547]/10 text-left border border-[#2D3E66] transition-all"
-                  >
-                    <p className="font-semibold text-white text-[11px]">CyberTech Ventures</p>
-                    <span className="text-[10px] text-[#FFB547]">Pending KYC • Application</span>
-                  </button>
-                </div>
+            {authError && (
+              <div role="alert" className="mb-5 rounded-xl border border-[#FF5D73]/40 bg-[#FF5D73]/10 px-4 py-3 text-xs text-[#FF93A4]">
+                {authError}
               </div>
             )}
-
-            {/* Registration Success Confirmation */}
-            {registrationSuccess ? (
-              <div className="text-center py-6">
-                <div className="w-14 h-14 rounded-full bg-[#20C997]/20 border border-[#20C997]/40 flex items-center justify-center mx-auto mb-3 text-[#20C997]">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h3 className="text-lg font-bold text-white font-display">Registration Submitted!</h3>
-                <p className="text-xs text-[#98A5BF] max-w-sm mx-auto mt-2 leading-relaxed">
-                  Your operator profile for <strong className="text-white">{companyName || 'your company'}</strong> has been registered. Sandbox API keys are ready, and compliance has queued your production review.
-                </p>
-                <div className="mt-6 flex justify-center gap-3">
-                  <Button
-                    variant="cyan"
-                    size="md"
-                    onClick={() => navigate('/operator/dashboard')}
-                  >
-                    Enter Operator Sandbox Dashboard
-                  </Button>
-                </div>
-              </div>
-            ) : isLogin ? (
+            {isLogin ? (
               /* Login Form */
               <form onSubmit={handleLogin} className="space-y-4">
                 <Input
@@ -208,9 +142,7 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     />
                     <span>Remember Company Session</span>
                   </label>
-                  <button type="button" className="text-[#00D4FF] hover:underline">
-                    Forgot Password?
-                  </button>
+                  <span className="text-[#64748B]">Password reset: contact support</span>
                 </div>
 
                 <Button
@@ -228,7 +160,7 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                   Don't have an operator account yet?{' '}
                   <button
                     type="button"
-                    onClick={() => setIsLogin(false)}
+                    onClick={() => { setAuthError(''); setIsLogin(false); }}
                     className="text-[#00D4FF] font-semibold hover:underline"
                   >
                     Register Company
@@ -360,14 +292,14 @@ export const OperatorAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                   className="w-full mt-2 font-display text-sm tracking-wide"
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                 >
-                  Create Operator & Get Sandbox Keys
+                  Submit Operator Application
                 </Button>
 
                 <div className="text-center pt-3 border-t border-[#233252]/80 text-xs text-[#98A5BF]">
                   Already have an operator account?{' '}
                   <button
                     type="button"
-                    onClick={() => setIsLogin(true)}
+                    onClick={() => { setAuthError(''); setIsLogin(true); }}
                     className="text-[#00D4FF] font-semibold hover:underline"
                   >
                     Sign In

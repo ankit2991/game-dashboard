@@ -1,278 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Maximize2,
-  Minimize2,
-  Volume2,
-  VolumeX,
-  RotateCw,
-  Sparkles,
-  Flame,
-  Coins,
-  ShieldCheck,
-  Heart,
-  Info,
-  CheckCircle2,
-  Play
-} from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, ArrowUpRight, Gamepad2, Info, LockKeyhole, Users, UserRound } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge';
-import { Button } from '../../../components/ui/Button';
-import { mockGames } from '../../../data/mock/gamesData';
-import type { Game } from '../../../types';
+import { CatalogStatus } from '../../../components/catalog/CatalogStatus';
+import { useProviderCatalog } from '../../../lib/catalog/useProviderCatalog';
+import { getCatalogArtwork, getSafeDemoUrl } from '../../../lib/catalog/catalogModel';
+import { launchApi, validateLaunchResponse, type BrowserGameLaunch, type LaunchMode } from '../../../lib/api/launch';
+import { useAuth } from '../../../context/AuthContext';
 
+/** Patch 4: a launch must be approved by the BE, not simulated in React. */
 export const B2CGamePlayer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { games, loading, error, refresh } = useProviderCatalog();
+  const { user, getPlayerAccessToken, isInitializing } = useAuth();
+  const game = games.find((entry) => entry.gameId === id);
+  const art = game ? getCatalogArtwork(game.gameId) : null;
+  const demo = game ? getSafeDemoUrl(game.demoUrl) : null;
+  const [pending, setPending] = useState<LaunchMode | null>(null);
+  const [launch, setLaunch] = useState<BrowserGameLaunch | null>(null);
+  const [launchError, setLaunchError] = useState<string | null>(null);
+  const [failedMode, setFailedMode] = useState<LaunchMode>('demo');
+  const request = useRef<AbortController | null>(null);
+  const alive = useRef(true);
 
-  const game = mockGames.find((g) => g.id === id) || mockGames[0];
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [simulatedBalance, setSimulatedBalance] = useState(5000.00);
-  const [betAmount, setBetAmount] = useState(10.00);
-  const [lastWin, setLastWin] = useState<number | null>(null);
-  const [multiplier, setMultiplier] = useState<string | null>(null);
-  const [reelIcons, setReelIcons] = useState(['⚡', '💎', '👑', '7️⃣', '🍒']);
-  const [isFavorite, setIsFavorite] = useState(false);
+  useEffect(() => {
+    alive.current = true;
+    setLaunch(null);
+    setLaunchError(null);
+    setPending(null);
+    return () => { alive.current = false; request.current?.abort(); request.current = null; };
+  }, [id]);
 
-  // Toggle fullscreen
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
-    }
-  };
-
-  const handleSpin = () => {
-    if (simulatedBalance < betAmount) {
-      alert('Insufficient demo credit. Refresh to reload credits.');
-      return;
-    }
-
-    setIsSpinning(true);
-    setLastWin(null);
-    setMultiplier(null);
-    setSimulatedBalance((prev) => prev - betAmount);
-
-    // Randomize slot icons
-    const iconsPool = ['⚡', '💎', '👑', '7️⃣', '🍒', '🔔', '🍇', '💰'];
-    const timer = setInterval(() => {
-      setReelIcons([
-        iconsPool[Math.floor(Math.random() * iconsPool.length)],
-        iconsPool[Math.floor(Math.random() * iconsPool.length)],
-        iconsPool[Math.floor(Math.random() * iconsPool.length)],
-        iconsPool[Math.floor(Math.random() * iconsPool.length)],
-        iconsPool[Math.floor(Math.random() * iconsPool.length)]
-      ]);
-    }, 100);
-
-    setTimeout(() => {
-      clearInterval(timer);
-      setIsSpinning(false);
-
-      // 60% chance of win in demo mode
-      const isWin = Math.random() > 0.4;
-      if (isWin) {
-        const mult = (Math.random() * 4 + 1.5).toFixed(1);
-        const winVal = parseFloat((betAmount * parseFloat(mult)).toFixed(2));
-        setMultiplier(`${mult}x`);
-        setLastWin(winVal);
-        setSimulatedBalance((prev) => prev + winVal);
+  const startGame = async (mode: LaunchMode) => {
+    if (!game || pending) return;
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    setPending(mode);
+    setLaunch(null);
+    setLaunchError(null);
+    try {
+      let accessToken: string | undefined;
+      if (mode === 'provider') {
+        const token = await getPlayerAccessToken();
+        if (!token) throw new Error('Sign in with a player account to start a provider session.');
+        accessToken = token;
       }
-    }, 1200);
+      if (controller.signal.aborted) return;
+      const issued = await launchApi.start(game.gameId, mode, { accessToken, signal: controller.signal });
+      const safe = validateLaunchResponse(issued, game.gameId, mode, game.demoUrl);
+      if (alive.current && !controller.signal.aborted) setLaunch(safe);
+    } catch (cause) {
+      if (alive.current && !controller.signal.aborted) {
+        setFailedMode(mode);
+        setLaunchError(cause instanceof Error ? cause.message : 'Cannot start the game right now.');
+      }
+    } finally {
+      if (request.current === controller) request.current = null;
+      if (alive.current && !controller.signal.aborted) setPending(null);
+    }
   };
-
-  const relatedGames = mockGames.filter((g) => g.id !== game.id).slice(0, 4);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      {/* Top Breadcrumb & Controls */}
-      <div className="flex items-center justify-between">
-        <Link
-          to="/games"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-[#98A5BF] hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Games Lobby</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <Badge variant="cyan" size="sm" dot>
-            Provider Stream: 60 FPS
-          </Badge>
-          <button
-            onClick={() => setIsFavorite(!isFavorite)}
-            className={`p-2 rounded-xl bg-[#182238] border border-[#233252] transition-colors ${
-              isFavorite ? 'text-[#FF5D73]' : 'text-[#98A5BF] hover:text-white'
-            }`}
-            title="Favorite"
-          >
-            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
-          </button>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5 min-h-[55vh]">
+      <Link to="/games" className="inline-flex gap-2 items-center text-[#00D4FF] hover:underline text-sm"><ArrowLeft className="w-4 h-4"/>Back to games</Link>
+      <CatalogStatus loading={loading} error={error} empty={!games.length && !loading && !error} retry={refresh}/>
+      {!loading && !error && games.length > 0 && !game && <div role="alert" className="p-8 bg-[#121A2D] border border-[#233252] rounded-2xl text-[#98A5BF]">This game is not in the enabled provider catalog. <Link to="/games" className="text-[#00D4FF] underline">Browse games</Link>.</div>}
+      {!loading && !error && game && art && <div className="rounded-3xl bg-[#121A2D] border border-[#233252] overflow-hidden">
+        <div className="p-8 sm:p-12 flex items-center justify-center relative min-h-52" style={{ background: `radial-gradient(circle at center, ${art.accent}40, #121A2D 70%)` }}><span className="text-8xl font-black" style={{ color: art.accent }} aria-hidden="true">{art.symbol}</span></div>
+        <div className="p-6 sm:p-10 space-y-5">
+          <div className="flex flex-wrap gap-3 items-center"><Badge variant="cyan">{art.genre}</Badge><Badge variant={game.providerLaunchAvailable ? 'success' : 'neutral'}>{game.providerLaunchAvailable ? 'Provider adapter enabled' : 'Demo only / Provider not configured'}</Badge></div>
+          <h1 className="text-3xl font-black font-display text-white">{game.name}</h1>
+          <p className="text-[#98A5BF] text-sm">{art.blurb}</p>
+          <p className="text-[#98A5BF] text-xs flex items-center gap-2">{game.gameMode === 'multiplayer' ? <Users className="w-4 h-4"/> : <UserRound className="w-4 h-4"/>}{game.gameMode === 'multiplayer' ? 'Multiplayer' : 'Single player'} · Game ID: {game.gameId}</p>
+          <div className="rounded-xl p-4 bg-[#182238] border border-[#233252] flex gap-3"><Info className="w-5 h-5 shrink-0 text-[#00D4FF]"/><p className="text-[#98A5BF] text-xs">Demo uses the external game without a provider wallet. Provider mode requires a signed-in player, an approved backend adapter and a configured sandbox wallet. Real-money play is not supported.</p></div>
+          <div className="flex flex-wrap gap-3 items-center">
+            {demo ? <button type="button" onClick={() => void startGame('demo')} disabled={!!pending} className="inline-flex gap-2 items-center px-6 py-3.5 rounded-xl font-semibold bg-[#7C5CFC] hover:bg-[#6947eb] disabled:opacity-60 text-white">{pending === 'demo' ? 'Preparing demo…' : 'Start demo'} <Gamepad2 className="w-4 h-4"/></button>
+              : <span className="text-[#FFB547] text-sm">No demo URL is configured.</span>}
+            {game.providerLaunchAvailable && <button type="button" onClick={() => void startGame('provider')} disabled={!!pending || isInitializing || !demo} className="inline-flex gap-2 items-center px-6 py-3.5 rounded-xl font-semibold bg-[#182238] border border-[#445472] hover:bg-[#233252] disabled:opacity-60 text-white"><LockKeyhole className="w-4 h-4"/>{pending === 'provider' ? 'Checking session…' : 'Start provider sandbox'}</button>}
+          </div>
+          {game.providerLaunchAvailable && !isInitializing && user?.role !== 'player' && <p className="text-[#98A5BF] text-sm">Provider mode requires your real player account. <Link to="/login" className="underline text-[#00D4FF]">Sign in</Link>.</p>}
+          {launchError && <div role="alert" className="border border-red-500/40 bg-red-500/10 rounded-xl p-4 text-sm text-red-300">{launchError} <button type="button" onClick={() => { setLaunchError(null); void startGame(failedMode); }} className="underline ml-2">Retry launch</button></div>}
+          {launch && <div role="status" className="rounded-xl bg-[#162A29] border border-emerald-700/40 p-5 space-y-3">
+            <p className="text-white font-semibold">{launch.mode === 'demo' ? 'Demo is ready' : 'Sandbox session is ready'}</p>
+            <p className="text-[#98A5BF] text-xs">{launch.mode === 'demo' ? 'Opens the separately hosted demo with no real-money wallet.' : 'One-time game handoff: open the game before the ticket expires.'}</p>
+            {launch.mode === 'provider' && launch.expiresAt && <p className="text-[#98A5BF] text-xs">Ticket expires: {new Date(launch.expiresAt).toLocaleString()}</p>}
+            <a href={launch.launchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex gap-2 items-center px-5 py-3 rounded-xl bg-[#00D4FF] text-[#091526] font-bold text-sm">Open {launch.mode === 'demo' ? 'demo' : 'sandbox game'} <ArrowUpRight className="w-4 h-4"/></a>
+          </div>}
         </div>
-      </div>
-
-      {/* Main Game Screen Stage */}
-      <div className="relative rounded-3xl overflow-hidden bg-[#000000] border border-[#2D3E66] shadow-2xl aspect-[16/9] min-h-[420px] sm:min-h-[540px] flex flex-col justify-between">
-        {/* Top Floating Overlay Bar */}
-        <div className="p-4 bg-gradient-to-b from-[#0B1020]/90 to-transparent flex items-center justify-between z-20">
-          <div className="flex items-center gap-3">
-            <img
-              src={game.thumbnail}
-              alt={game.title}
-              className="w-10 h-10 rounded-xl object-cover border border-white/20"
-            />
-            <div>
-              <h2 className="font-bold text-white text-sm font-display">{game.title}</h2>
-              <span className="text-[10px] text-[#00D4FF]">{game.providerName} • RTP: {game.rtp}%</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className="p-2 rounded-xl bg-[#182238]/80 text-[#98A5BF] hover:text-white backdrop-blur-md border border-white/10"
-              title={isMuted ? 'Unmute' : 'Mute'}
-            >
-              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 rounded-xl bg-[#182238]/80 text-[#98A5BF] hover:text-white backdrop-blur-md border border-white/10"
-              title="Toggle Fullscreen"
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Center Interactive Simulated Slot / Game Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10">
-          {/* Animated Glow */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className={`w-96 h-96 rounded-full blur-3xl transition-opacity duration-500 ${isSpinning ? 'bg-[#7C5CFC]/30 opacity-100' : lastWin ? 'bg-[#20C997]/30 opacity-100' : 'bg-[#00D4FF]/10 opacity-30'}`} />
-          </div>
-
-          {/* Slot Reels Container */}
-          <div className="relative z-10 p-3 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#121A2D]/80 border-2 border-[#7C5CFC]/50 backdrop-blur-xl shadow-2xl flex items-center justify-center gap-2 sm:gap-4 md:gap-6 max-w-full">
-            {reelIcons.map((icon, idx) => (
-              <div
-                key={idx}
-                className={`w-11 sm:w-16 md:w-20 h-16 sm:h-24 md:h-28 rounded-xl sm:rounded-2xl bg-[#0B1020] border border-[#2D3E66] flex items-center justify-center text-2xl sm:text-4xl md:text-5xl shadow-inner transition-transform flex-shrink-0 ${
-                  isSpinning ? 'animate-bounce' : ''
-                }`}
-              >
-                {icon}
-              </div>
-            ))}
-          </div>
-
-          {/* Win Announcement Banner */}
-          {lastWin && !isSpinning && (
-            <div className="mt-4 px-6 py-2 rounded-full bg-gradient-to-r from-[#20C997] to-[#00D4FF] text-[#0B1020] font-black text-sm sm:text-base font-display shadow-2xl animate-in zoom-in-95 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 fill-current" />
-              <span>BIG WIN: +${lastWin.toFixed(2)} ({multiplier})!</span>
-            </div>
-          )}
-
-          <p className="text-[11px] text-[#98A5BF] mt-3">
-            Simulated Game Canvas • Verified by Nexus Provably Fair Engine
-          </p>
-        </div>
-
-        {/* Bottom Interactive Dashboard Console */}
-        <div className="p-4 bg-gradient-to-t from-[#0B1020] via-[#0B1020]/95 to-transparent border-t border-[#233252] flex flex-wrap items-center justify-between gap-4 z-20">
-          {/* Balance & Bet Settings */}
-          <div className="flex items-center gap-4">
-            <div className="px-3 py-1.5 rounded-xl bg-[#182238] border border-[#2D3E66]">
-              <span className="text-[10px] text-[#98A5BF] block">Demo Credit</span>
-              <span className="font-mono font-bold text-sm text-[#00D4FF]">
-                ${simulatedBalance.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[#98A5BF] font-semibold">Bet:</span>
-              {[5, 10, 25, 50].map((amt) => (
-                <button
-                  key={amt}
-                  onClick={() => setBetAmount(amt)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
-                    betAmount === amt
-                      ? 'bg-[#7C5CFC] text-white shadow-md'
-                      : 'bg-[#182238] text-[#98A5BF] hover:text-white'
-                  }`}
-                >
-                  ${amt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Big Spin Action Button */}
-          <Button
-            variant="primary"
-            size="lg"
-            isLoading={isSpinning}
-            onClick={handleSpin}
-            className="px-8 font-black font-display text-sm tracking-wider shadow-xl shadow-[#7C5CFC]/40"
-            leftIcon={<RotateCw className={`w-4 h-4 ${isSpinning ? 'animate-spin' : ''}`} />}
-          >
-            {isSpinning ? 'SPINNING...' : 'SPIN / BET'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Game Information & Specifications */}
-      <Card>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-          <div>
-            <span className="text-[#98A5BF] block">Theoretical RTP</span>
-            <span className="text-base font-bold text-[#20C997] font-mono">{game.rtp}%</span>
-          </div>
-          <div>
-            <span className="text-[#98A5BF] block">Volatility Level</span>
-            <span className="text-base font-bold text-white">{game.volatility}</span>
-          </div>
-          <div>
-            <span className="text-[#98A5BF] block">Min / Max Bet</span>
-            <span className="text-base font-bold text-[#00D4FF] font-mono">${game.minBet.toFixed(2)} - ${game.maxBet.toFixed(2)}</span>
-          </div>
-          <div>
-            <span className="text-[#98A5BF] block">Studio Engine</span>
-            <span className="text-base font-bold text-white">{game.providerName}</span>
-          </div>
-        </div>
-      </Card>
-
-      {/* Related Games Carousel */}
-      <div className="space-y-3 pt-2">
-        <h3 className="text-base font-bold text-white font-display">More Games You Might Like</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {relatedGames.map((rg) => (
-            <div
-              key={rg.id}
-              onClick={() => navigate(`/play/${rg.id}`)}
-              className="p-3 rounded-2xl bg-[#121A2D] border border-[#233252] hover:border-[#7C5CFC]/40 transition-all cursor-pointer group flex items-center gap-3"
-            >
-              <img
-                src={rg.thumbnail}
-                alt={rg.title}
-                className="w-12 h-12 rounded-xl object-cover border border-[#2D3E66]"
-              />
-              <div className="min-w-0">
-                <p className="font-bold text-white text-xs truncate group-hover:text-[#00D4FF]">{rg.title}</p>
-                <span className="text-[10px] text-[#98A5BF]">{rg.providerName}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      </div>}
     </div>
   );
 };

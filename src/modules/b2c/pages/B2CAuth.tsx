@@ -1,120 +1,101 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Gamepad2,
   Lock,
   Mail,
   User,
-  Phone,
   Eye,
   EyeOff,
-  CheckCircle2,
+  AlertCircle,
   ArrowRight,
-  ShieldCheck,
-  Sparkles,
-  KeyRound
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Modal } from '../../../components/ui/Modal';
-import { Badge } from '../../../components/ui/Badge';
+import { ApiError } from '../../../lib/api/client';
 import { useAuth } from '../../../context/AuthContext';
 
 export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ initialMode = 'login' }) => {
   const navigate = useNavigate();
-  const { loginAs, registerPlayer } = useAuth();
+  const { loginPlayer, registerPlayer } = useAuth();
   const [searchParams] = useSearchParams();
   const modeParam = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(modeParam ? modeParam === 'login' : initialMode === 'login');
 
   // Login form state
-  const [loginIdentifier, setLoginIdentifier] = useState('raymond_vip99');
-  const [loginPassword, setLoginPassword] = useState('••••••••••••');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Register form state
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Modals
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
-  const [show2FAModal, setShow2FAModal] = useState(false);
-  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+  const errorMessage = (error: unknown): string => {
+    if (!(error instanceof ApiError)) return error instanceof Error ? error.message : 'Unable to authenticate.';
+    if (error.code === 'INVALID_CREDENTIALS') return 'Incorrect username/email or password.';
+    if (error.code === 'ACCOUNT_ALREADY_EXISTS') return 'Email or username is already registered.';
+    if (error.status === 404) return 'Player authentication is not enabled on the backend. Set B2C_AUTH_ENABLED=true.';
+    if (error.status === 429) return 'Too many attempts. Please try again later.';
+    return error.message;
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+    setToastMessage(null);
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await loginPlayer(loginIdentifier.trim(), loginPassword, rememberMe);
+      navigate('/player/profile', { replace: true });
+    } catch (error) {
+      setToastMessage(errorMessage(error));
+    } finally {
       setIsLoading(false);
-      setShow2FAModal(true);
-    }, 600);
+    }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      showToast('Passwords do not match. Please verify.');
+    if (isLoading) return;
+    if (!agreeTerms) { setToastMessage('Please accept the Terms of Service.'); return; }
+    if (password !== confirmPassword) { setToastMessage('Passwords do not match.'); return; }
+    if (password.length < 12 || password.length > 128) {
+      setToastMessage('Password must be between 12 and 128 characters.');
       return;
     }
+    setToastMessage(null);
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      await registerPlayer({
+        displayName: fullName.trim(), email: email.trim(), username: username.trim(), password,
+      }, rememberMe);
+      navigate('/player/profile', { replace: true });
+    } catch (error) {
+      setToastMessage(errorMessage(error));
+    } finally {
       setIsLoading(false);
-      registerPlayer({
-        fullName: fullName || username || 'New Player',
-        email: email || `${username || 'player'}@nexus-play.com`,
-        username: username || 'player1',
-      });
-      showToast('Player account created successfully! Welcome to Nexus Play.');
-      navigate('/');
-    }, 600);
-  };
-
-  const handleVerify2FA = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setShow2FAModal(false);
-      const isSarah = loginIdentifier.toLowerCase().includes('sarah');
-      loginAs('player', {
-        name: isSarah ? 'Sarah Jenkins' : 'Raymond Chen',
-        email: isSarah ? 'sarah.j@nexus-play.com' : 'raymond.chen@nexus-vip.com',
-      });
-      showToast('Logged in successfully!');
-      navigate('/');
-    }, 500);
-  };
-
-  const handleQuickDemo = (user: 'raymond' | 'sarah') => {
-    if (user === 'raymond') {
-      setLoginIdentifier('raymond_vip99');
-      setLoginPassword('RaymondVIPPass99!');
-    } else {
-      setLoginIdentifier('sarah_spinqueen');
-      setLoginPassword('SarahSpinQueen2026!');
     }
   };
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 relative">
-      {/* Toast Alert */}
+      {/* Authentication errors */}
       {toastMessage && (
-        <div className="fixed top-14 right-6 z-50 bg-[#20C997] text-[#0B1020] px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{toastMessage}</span>
+        <div className="fixed top-14 right-6 z-50 bg-[#FF5D73] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in">
+          <AlertCircle className="w-4 h-4" />
+          <span role="alert">{toastMessage}</span>
         </div>
       )}
 
@@ -134,41 +115,14 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
             </h1>
             <p className="text-xs text-[#98A5BF] mt-1">
               {isLogin
-                ? 'Sign in to access your casino wallet, bets, and favorite games'
-                : 'Join now and claim your 100% Welcome Multiplier Bonus up to $1,000'}
+                ? 'Sign in with your registered player account'
+                : 'Create a real player account connected to the Game Provider backend'}
             </p>
           </div>
 
-          {/* Quick Demo Logins */}
-          {isLogin && (
-            <div className="mb-6 bg-[#0B1020]/80 rounded-2xl p-3 border border-[#233252] text-xs">
-              <div className="flex items-center justify-between text-[#98A5BF] mb-2 font-medium">
-                <span className="flex items-center gap-1.5 text-white">
-                  <Sparkles className="w-3.5 h-3.5 text-[#00D4FF]" />
-                  Quick Demo Players:
-                </span>
-                <span className="text-[10px] text-[#00D4FF]">Click to autofill</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo('raymond')}
-                  className="p-2 rounded-xl bg-[#182238] hover:bg-[#7C5CFC]/15 text-left border border-[#2D3E66] transition-all"
-                >
-                  <p className="font-semibold text-white text-[11px]">Raymond Chen</p>
-                  <span className="text-[10px] text-[#20C997]">VIP • MYR 8,420.50</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo('sarah')}
-                  className="p-2 rounded-xl bg-[#182238] hover:bg-[#00D4FF]/15 text-left border border-[#2D3E66] transition-all"
-                >
-                  <p className="font-semibold text-white text-[11px]">Sarah Jenkins</p>
-                  <span className="text-[10px] text-[#00D4FF]">VIP • GBP 2,150.00</span>
-                </button>
-              </div>
-            </div>
-          )}
+          <p className="text-xs text-[#98A5BF] bg-[#0B1020] border border-[#233252] rounded-xl p-3 mb-5">
+            {isLogin ? 'Enter your registered username or email and password.' : 'Accounts are registered on the backend. No automatic wallet bonus is granted.'}
+          </p>
 
           {/* Form */}
           {isLogin ? (
@@ -252,22 +206,15 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
                 required
               />
 
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label="Username"
-                  placeholder="raymond_vip99"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-                <Input
-                  label="Phone Number"
-                  placeholder="+60 12-345 6789"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>
+              <Input
+                label="Username"
+                placeholder="player_123"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                minLength={3}
+                maxLength={24}
+                required
+              />
 
               <Input
                 label="Email Address"
@@ -284,6 +231,8 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
                   label="Password"
                   placeholder="••••••••••••"
                   type="password"
+                  minLength={12}
+                  maxLength={128}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -292,6 +241,8 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
                   label="Confirm Password"
                   placeholder="••••••••••••"
                   type="password"
+                  minLength={12}
+                  maxLength={128}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -319,7 +270,7 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
                 className="w-full mt-2 font-display text-sm tracking-wide"
                 rightIcon={<ArrowRight className="w-4 h-4" />}
               >
-                Create Account & Claim Bonus
+                Create Player Account
               </Button>
 
               <div className="text-center pt-3 border-t border-[#233252]/80 text-xs text-[#98A5BF]">
@@ -337,97 +288,18 @@ export const B2CAuth: React.FC<{ initialMode?: 'login' | 'register' }> = ({ init
         </div>
       </div>
 
-      {/* 2FA Modal */}
-      <Modal
-        isOpen={show2FAModal}
-        onClose={() => setShow2FAModal(false)}
-        title="Two-Factor Security Verification"
-        maxWidth="md"
-        footer={
-          <div className="flex items-center justify-between w-full">
-            <button
-              onClick={() => setShow2FAModal(false)}
-              className="text-xs text-[#98A5BF] hover:text-white"
-            >
-              Cancel
-            </button>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleVerify2FA}
-              isLoading={isLoading}
-            >
-              Verify Code
-            </Button>
-          </div>
-        }
-      >
-        <div className="text-center py-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#7C5CFC]/15 border border-[#7C5CFC]/30 flex items-center justify-center mx-auto mb-3 text-[#A885FF]">
-            <KeyRound className="w-6 h-6" />
-          </div>
-          <h4 className="font-semibold text-white text-base">Enter 6-Digit Code</h4>
-          <p className="text-xs text-[#98A5BF] mt-1 mb-5">
-            A verification code was dispatched to your registered authenticator app or phone.
-          </p>
-
-          <div className="flex justify-center gap-2 mb-4">
-            {[0, 1, 2, 3, 4, 5].map((idx) => (
-              <input
-                key={idx}
-                type="text"
-                maxLength={1}
-                placeholder="•"
-                className="w-11 h-12 text-center text-lg font-mono font-bold bg-[#0B1020] text-[#00D4FF] border border-[#2D3E66] rounded-xl focus:border-[#7C5CFC] outline-none"
-              />
-            ))}
-          </div>
-
-          <p className="text-[11px] text-[#64748B]">
-            Mock Tip: Click 'Verify Code' directly to authenticate.
-          </p>
-        </div>
-      </Modal>
-
-      {/* Forgot Password Modal */}
+      {/* Password reset is not supported by this backend. Do not fake sending an email. */}
       <Modal
         isOpen={showForgotModal}
-        onClose={() => {
-          setShowForgotModal(false);
-          setForgotSent(false);
-        }}
+        onClose={() => setShowForgotModal(false)}
         title="Reset Player Password"
         maxWidth="md"
-        footer={
-          <Button variant="secondary" onClick={() => setShowForgotModal(false)}>
-            Close
-          </Button>
-        }
+        footer={<Button variant="secondary" onClick={() => setShowForgotModal(false)}>Close</Button>}
       >
-        {forgotSent ? (
-          <div className="text-center py-4">
-            <CheckCircle2 className="w-10 h-10 text-[#20C997] mx-auto mb-2" />
-            <h4 className="font-semibold text-white">Reset Link Dispatched</h4>
-            <p className="text-xs text-[#98A5BF] mt-1">
-              Check your email for the secure password recovery link.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-xs text-[#98A5BF]">
-              Enter your email address to receive password reset instructions.
-            </p>
-            <Input label="Email Address" placeholder="player@example.com" />
-            <Button
-              variant="primary"
-              size="sm"
-              className="w-full"
-              onClick={() => setForgotSent(true)}
-            >
-              Send Reset Link
-            </Button>
-          </div>
-        )}
+        <p className="text-sm text-[#98A5BF]">
+          Password recovery is not available yet. Contact your platform administrator for assistance.
+          No reset email has been sent.
+        </p>
       </Modal>
     </div>
   );

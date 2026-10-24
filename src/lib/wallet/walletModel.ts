@@ -1,0 +1,76 @@
+/** Backend-owned, read-only sandbox activity. Never derive a balance from ledger deltas. */
+export interface WalletOverview {
+  mode: 'sandbox_only';
+  configured: boolean;
+  balanceMinor: null;
+  currency: null;
+  decimals: null;
+  balanceStatus: 'unavailable';
+  canDeposit: false;
+  canWithdraw: false;
+  transactionHistoryAvailable: boolean;
+}
+export type WalletOperation = 'bet' | 'win' | 'refund';
+export type WalletTransactionStatus = 'succeeded' | 'rejected' | 'inflight' | 'indeterminate';
+export interface PlayerWalletTransaction {
+  transactionId: string;
+  gameId: string;
+  operation: WalletOperation;
+  amountMinor: number;
+  currency: string;
+  status: WalletTransactionStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PlayerTransactionPage {
+  source: 'provider_ledger';
+  mode: 'sandbox_only';
+  configured: boolean;
+  limit: number;
+  offset: number;
+  total: number;
+  transactions: PlayerWalletTransaction[];
+}
+export const TRANSACTION_PAGE_SIZE = 20;
+
+export function transactionPaging(offset: number) {
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > 10000 || offset % TRANSACTION_PAGE_SIZE !== 0) {
+    throw new Error('Invalid transaction offset');
+  }
+  return { limit: TRANSACTION_PAGE_SIZE, offset };
+}
+export function amountLabel(amountMinor: number, currency: string) {
+  // We do not have an API contract for decimal places per historical currency.
+  // Print canonical minor units instead of incorrectly treating COIN or MYR as cents.
+  if (!Number.isSafeInteger(amountMinor) || amountMinor < 0 || !/^[A-Z0-9]{3,8}$/.test(currency)) return 'Unavailable';
+  return `${amountMinor.toLocaleString('en-US')} ${currency} (minor units)`;
+}
+export function validateWalletOverview(data: WalletOverview): WalletOverview {
+  if (!data || data.mode !== 'sandbox_only' || typeof data.configured !== 'boolean' ||
+      data.balanceStatus !== 'unavailable' || data.balanceMinor !== null ||
+      data.currency !== null || data.decimals !== null ||
+      data.canDeposit !== false || data.canWithdraw !== false ||
+      data.transactionHistoryAvailable !== data.configured) throw new Error('Invalid wallet summary response');
+  return data;
+}
+export function validateTransactionPage(data: PlayerTransactionPage, offset: number): PlayerTransactionPage {
+  if (!data || data.source !== 'provider_ledger' || data.mode !== 'sandbox_only' ||
+      typeof data.configured !== 'boolean' || data.offset !== offset ||
+      data.limit !== TRANSACTION_PAGE_SIZE || !Number.isSafeInteger(data.total) ||
+      data.total < 0 || !Array.isArray(data.transactions) || data.transactions.length > TRANSACTION_PAGE_SIZE ||
+      data.transactions.length > Math.max(0, data.total - offset)) {
+    throw new Error('Invalid transaction history response');
+  }
+  for (const row of data.transactions) {
+    if (!row || typeof row.transactionId !== 'string' || !/^[A-Za-z0-9_.:-]{8,128}$/.test(row.transactionId) ||
+        typeof row.gameId !== 'string' || !/^[a-z0-9-]{2,64}$/.test(row.gameId) ||
+        !['bet', 'win', 'refund'].includes(row.operation) ||
+        !['succeeded', 'rejected', 'inflight', 'indeterminate'].includes(row.status) ||
+        !Number.isSafeInteger(row.amountMinor) || row.amountMinor <= 0 ||
+        typeof row.currency !== 'string' || !/^[A-Z0-9]{3,8}$/.test(row.currency) ||
+        !Number.isFinite(Date.parse(row.createdAt)) || !Number.isFinite(Date.parse(row.updatedAt))) {
+      throw new Error('Invalid transaction record');
+    }
+  }
+  return data;
+}

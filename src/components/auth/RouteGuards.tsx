@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import type { UserRole } from '../../context/AuthContext';
@@ -9,8 +9,10 @@ interface RequireAuthProps {
 }
 
 export const RequireAuth: React.FC<RequireAuthProps> = ({ children, fallbackLoginRoute }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
   const location = useLocation();
+
+  if (isInitializing) return <div className="min-h-screen bg-[#0B1020] text-white flex items-center justify-center">Restoring session…</div>;
 
   if (!isAuthenticated) {
     let target = fallbackLoginRoute;
@@ -35,8 +37,10 @@ interface RequireRoleProps {
 }
 
 export const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isInitializing } = useAuth();
   const location = useLocation();
+
+  if (isInitializing) return <div className="min-h-screen bg-[#0B1020] text-white flex items-center justify-center">Restoring session…</div>;
 
   if (!isAuthenticated || !user) {
     let loginTarget = '/login';
@@ -57,19 +61,29 @@ interface RequireOperatorApprovalProps {
 }
 
 export const RequireOperatorApproval: React.FC<RequireOperatorApprovalProps> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, reloadOperatorStatus } = useAuth();
+  const location = useLocation();
+  const [checkedPath, setCheckedPath] = useState<string | null>(null);
+  const [checkFailed, setCheckFailed] = useState(false);
 
-  if (!user || user.role !== 'operator') {
-    return <Navigate to="/operator/login" replace />;
-  }
+  useEffect(() => {
+    if (user?.role !== 'operator' || user.operatorApprovalStatus !== 'approved') return;
+    let active = true;
+    setCheckFailed(false);
+    void reloadOperatorStatus().then(() => {
+      if (active) setCheckedPath(location.pathname);
+    }).catch(() => {
+      if (active) setCheckFailed(true);
+    });
+    return () => { active = false; };
+  }, [location.pathname, reloadOperatorStatus, user?.id, user?.role, user?.operatorApprovalStatus]);
 
-  if (user.operatorApprovalStatus === 'pending') {
-    return <Navigate to="/operator/pending-approval" replace />;
-  }
-
-  if (user.operatorApprovalStatus === 'suspended' || user.operatorApprovalStatus === 'rejected') {
+  if (!user || user.role !== 'operator') return <Navigate to="/operator/login" replace />;
+  if (user.operatorApprovalStatus === 'pending') return <Navigate to="/operator/pending-approval" replace />;
+  if (user.operatorApprovalStatus !== 'approved') {
     return <Navigate to="/access-denied" state={{ reason: 'operator_suspended' }} replace />;
   }
-
+  if (checkFailed) return <div className="min-h-screen bg-[#0B1020] text-[#FF5D73] p-8">Unable to verify operator approval. Check your connection and reload.</div>;
+  if (checkedPath !== location.pathname) return <div className="min-h-screen bg-[#0B1020] text-white p-8">Verifying operator approval…</div>;
   return <>{children}</>;
 };

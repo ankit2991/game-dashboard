@@ -1,187 +1,40 @@
 import React, { useState } from 'react';
-import {
-  Users,
-  Plus,
-  Mail,
-  Shield,
-  CheckCircle2,
-  Trash2,
-  Edit2
-} from 'lucide-react';
-import { Card, CardHeader } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
+import { Users } from 'lucide-react';
+import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Modal } from '../../../components/ui/Modal';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Owner' | 'Developer' | 'Finance' | 'Operations';
-  status: 'Active' | 'Invited';
-}
-
+import { operatorOperationsApi, type TeamRole } from '../../../lib/api/operator';
+import { useOperatorOperations } from '../../../lib/operator/useOperatorOperations';
 export const OperatorTeam: React.FC = () => {
-  const [members, setMembers] = useState<TeamMember[]>([
-    { id: '1', name: 'David Tan', email: 'd.tan@asiagaming.net', role: 'Owner', status: 'Active' },
-    { id: '2', name: 'Alvin Lim', email: 'alvin.lim@asiagaming.net', role: 'Developer', status: 'Active' },
-    { id: '3', name: 'Jessie Wong', email: 'jessie.w@asiagaming.net', role: 'Finance', status: 'Active' }
-  ]);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newRole, setNewRole] = useState<'Developer' | 'Finance' | 'Operations'>('Developer');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+  const { data, loading, error, refresh, getOperatorAccessToken } = useOperatorOperations(operatorOperationsApi.team);
+  const [name, setName] = useState(''); const [email, setEmail] = useState('');
+  const [role, setRole] = useState<TeamRole>('Developer');
+  const [busy, setBusy] = useState(false); const [message, setMessage] = useState('');
+  const add = async (e: React.FormEvent) => {
+    e.preventDefault(); setBusy(true); setMessage('');
+    try { const token = await getOperatorAccessToken(); if (!token) throw Error('Session expired.');
+      await operatorOperationsApi.addTeamDraft(token, { name: name.trim(), email: email.trim(), role });
+      setName(''); setEmail(''); setMessage('Roster entry saved. No invitation email was sent; access was not granted.'); refresh();
+    } catch (err) { setMessage(err instanceof Error ? err.message : 'Could not add entry'); }
+    finally { setBusy(false); }
   };
-
-  const handleInvite = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newEmail || !newName) return;
-    setMembers([
-      ...members,
-      { id: Date.now().toString(), name: newName, email: newEmail, role: newRole, status: 'Invited' }
-    ]);
-    showToast(`Invitation sent to ${newEmail}`);
-    setIsInviteModalOpen(false);
-    setNewName('');
-    setNewEmail('');
+  const remove = async (id: string) => {
+    setBusy(true); setMessage(''); try { const token = await getOperatorAccessToken(); if (!token) throw Error('Session expired.');
+      await operatorOperationsApi.removeTeamDraft(token, id); refresh();
+    } catch (err) { setMessage(err instanceof Error ? err.message : 'Could not remove entry'); }
+    finally { setBusy(false); }
   };
-
-  return (
-    <div className="space-y-6">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="fixed top-14 right-6 z-50 bg-[#00D4FF] text-[#0B1020] px-4 py-2.5 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#233252]/60">
-        <div>
-          <h1 className="text-2xl font-bold font-display text-white tracking-tight flex items-center gap-2.5">
-            <Users className="w-6 h-6 text-[#00D4FF]" />
-            Operator Team & Role Permissions
-          </h1>
-          <p className="text-xs text-[#98A5BF] mt-1">
-            Grant your engineering and finance staff access to API keys, webhooks, and billing statements.
-          </p>
-        </div>
-
-        <Button
-          variant="cyan"
-          size="sm"
-          leftIcon={<Plus className="w-3.5 h-3.5" />}
-          onClick={() => setIsInviteModalOpen(true)}
-        >
-          Invite Colleague
-        </Button>
-      </div>
-
-      {/* Table */}
-      <Card>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-[#121A2D] text-[#98A5BF] uppercase font-semibold border-b border-[#233252]">
-              <tr>
-                <th className="py-3 px-3">Team Member</th>
-                <th className="py-3 px-3">Work Email</th>
-                <th className="py-3 px-3">Portal Role</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#233252]/60">
-              {members.map((m) => (
-                <tr key={m.id} className="hover:bg-[#182238]/60 transition-colors">
-                  <td className="py-3 px-3 font-semibold text-white">{m.name}</td>
-                  <td className="py-3 px-3 text-[#98A5BF]">{m.email}</td>
-                  <td className="py-3 px-3">
-                    <span className="font-semibold text-[#00D4FF]">{m.role}</span>
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <Badge variant={m.status === 'Active' ? 'success' : 'warning'} size="sm">
-                      {m.status}
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    {m.role !== 'Owner' && (
-                      <button
-                        onClick={() => {
-                          setMembers(members.filter((item) => item.id !== m.id));
-                          showToast(`Removed ${m.name} from team.`);
-                        }}
-                        className="p-1 text-[#98A5BF] hover:text-[#FF5D73]"
-                        title="Remove member"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {/* Invite Modal */}
-      {isInviteModalOpen && (
-        <Modal
-          isOpen={isInviteModalOpen}
-          onClose={() => setIsInviteModalOpen(false)}
-          title="Invite New Team Member"
-          maxWidth="md"
-          footer={
-            <div className="flex items-center justify-end gap-2 w-full">
-              <Button variant="outline" size="sm" onClick={() => setIsInviteModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="cyan" size="sm" onClick={handleInvite}>
-                Send Email Invitation
-              </Button>
-            </div>
-          }
-        >
-          <form onSubmit={handleInvite} className="space-y-3.5 text-xs">
-            <Input
-              label="Full Name"
-              placeholder="e.g. Rachel Chen"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              required
-            />
-            <Input
-              label="Corporate Email Address"
-              placeholder="rachel@asiagaming.net"
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              required
-            />
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#98A5BF] mb-1.5">
-                Role Access Level
-              </label>
-              <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value as any)}
-                className="w-full rounded-xl bg-[#0B1020] text-sm text-white border border-[#233252] p-2.5 outline-none"
-              >
-                <option value="Developer">Developer (API Keys, Docs, Webhooks, Logs)</option>
-                <option value="Finance">Finance (Statements, Reports & GGR)</option>
-                <option value="Operations">Operations (Catalog, Games & Settings)</option>
-              </select>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </div>
-  );
+  return <div className="space-y-6"><div className="border-b border-[#233252] pb-4"><h1 className="text-2xl font-bold text-white flex items-center gap-2"><Users className="text-[#00D4FF]"/>Operator Team Roster</h1>
+      <p className="text-[#98A5BF] text-xs mt-1">Manage proposed team entries. Invitations, member login and role-based access are not yet enabled; only the authenticated account owner can access this portal.</p></div>
+    <Card><form className="flex flex-wrap gap-3 items-end" onSubmit={e => void add(e)}><label className="text-[#98A5BF] text-xs">Full name<input required minLength={2} maxLength={80} value={name} onChange={e => setName(e.target.value)} className="block rounded-lg bg-[#0B1020] border border-[#233252] text-white p-2 mt-1"/></label>
+      <label className="text-[#98A5BF] text-xs">Email<input required type="email" maxLength={254} value={email} onChange={e => setEmail(e.target.value)} className="block rounded-lg bg-[#0B1020] border border-[#233252] text-white p-2 mt-1"/></label>
+      <label className="text-[#98A5BF] text-xs">Proposed role<select value={role} onChange={e => setRole(e.target.value as TeamRole)} className="block rounded-lg bg-[#0B1020] border border-[#233252] text-white p-2 mt-1"><option>Developer</option><option>Finance</option><option>Operations</option></select></label>
+      <Button type="submit" size="sm" disabled={busy || loading || !!error}>Save roster entry</Button></form>
+      {message && <p role="status" className="text-[#00D4FF] text-xs mt-3">{message}</p>}
+      {error && <p role="alert" className="text-[#FF5D73] text-xs mt-3">{error}</p>}
+    </Card>
+    <Card><h2 className="text-white font-semibold mb-3">Proposed members ({data?.members.length ?? 0})</h2>
+      {loading ? <p className="text-[#98A5BF]">Loading roster…</p> : !data?.members.length ? <p className="text-[#98A5BF] text-sm">No roster entries saved.</p> :
+        <div className="space-y-2">{data.members.map(m => <div key={m.id} className="flex gap-3 items-center justify-between border-t border-[#233252] pt-3 text-sm"><div><p className="text-white">{m.name} · {m.role}</p><p className="text-[#98A5BF] text-xs">{m.email} · Draft (no access)</p></div><Button size="sm" variant="danger" disabled={busy} onClick={() => void remove(m.id)}>Remove</Button></div>)}</div>}
+    </Card>
+  </div>;
 };
