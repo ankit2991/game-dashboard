@@ -4,6 +4,8 @@ export interface LaunchCapability {
   demoAvailable: boolean;
   providerHandoffConfigured: boolean;
   gameBackendConfigured: boolean;
+  pinballSandboxPilotConfigured?: boolean;
+  sandboxPilotConfigured?: boolean;
   browserE2eVerified: false;
   liveMoneySupported: false;
   blockers: string[];
@@ -24,7 +26,10 @@ export function validateLaunchCapabilities(value: unknown): LaunchCapabilitiesRe
     const game = item as Record<string, unknown>;
     if (typeof game.gameId !== 'string' || !/^[a-z0-9-]{2,64}$/.test(game.gameId) || seen.has(game.gameId) ||
         typeof game.demoAvailable !== 'boolean' || typeof game.providerHandoffConfigured !== 'boolean' ||
-        typeof game.gameBackendConfigured !== 'boolean' || game.browserE2eVerified !== false ||
+        typeof game.gameBackendConfigured !== 'boolean' ||
+        (game.pinballSandboxPilotConfigured !== undefined && typeof game.pinballSandboxPilotConfigured !== 'boolean') ||
+        (game.sandboxPilotConfigured !== undefined && typeof game.sandboxPilotConfigured !== 'boolean') ||
+        game.browserE2eVerified !== false ||
         game.liveMoneySupported !== false || !Array.isArray(game.blockers) ||
         game.blockers.some(code => typeof code !== 'string' || !/^[A-Z_]+$/.test(code))) {
       throw new Error('Invalid launch capabilities response');

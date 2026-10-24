@@ -2,10 +2,11 @@
 export interface WalletOverview {
   mode: 'sandbox_only';
   configured: boolean;
-  balanceMinor: null;
-  currency: null;
-  decimals: null;
-  balanceStatus: 'unavailable';
+  balanceMinor: number | null;
+  currency: 'COIN' | null;
+  decimals: 0 | null;
+  balanceStatus: 'unavailable' | 'verified';
+  balanceSource?: 'operator_sandbox' | null;
   canDeposit: false;
   canWithdraw: false;
   transactionHistoryAvailable: boolean;
@@ -60,8 +61,13 @@ export function amountLabel(amountMinor: number, currency: string) {
 }
 export function validateWalletOverview(data: WalletOverview): WalletOverview {
   if (!data || data.mode !== 'sandbox_only' || typeof data.configured !== 'boolean' ||
-      data.balanceStatus !== 'unavailable' || data.balanceMinor !== null ||
-      data.currency !== null || data.decimals !== null ||
+      !['unavailable', 'verified'].includes(data.balanceStatus) ||
+      (data.balanceStatus === 'verified' ?
+        (!data.configured || !Number.isSafeInteger(data.balanceMinor) || data.balanceMinor === null ||
+         data.balanceMinor < 0 || data.currency !== 'COIN' || data.decimals !== 0 ||
+         data.balanceSource !== 'operator_sandbox') :
+        (data.balanceMinor !== null || data.currency !== null || data.decimals !== null ||
+         (data.balanceSource !== null && data.balanceSource !== undefined))) ||
       data.canDeposit !== false || data.canWithdraw !== false ||
       data.transactionHistoryAvailable !== data.configured) throw new Error('Invalid wallet summary response');
   return data;

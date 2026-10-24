@@ -12,19 +12,22 @@ export const PlayerWallet: React.FC = () => {
   return <div className="space-y-6">
     <div className="pb-3 border-b border-[#233252]/60 flex flex-wrap justify-between items-center gap-3">
       <div><h1 className="text-2xl font-bold text-white flex gap-2 items-center"><Wallet className="w-6 h-6 text-[#00D4FF]" /> Sandbox Wallet</h1>
-        <p className="text-xs text-[#98A5BF] mt-1">Read-only view of your account's provider ledger activity. No real-money services.</p></div>
+        <p className="text-xs text-[#98A5BF] mt-1">Your account's verified fake-COIN wallet balance when enabled. No real-money services.</p></div>
       <Button variant="outline" size="sm" onClick={() => { refresh(); activity.refresh(); }} leftIcon={<RefreshCw className="w-4 h-4" />}>Refresh</Button>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="p-5 rounded-2xl bg-[#182238] border border-[#00D4FF]/30 space-y-2">
         <p className="text-xs text-[#98A5BF] font-semibold uppercase">Verified account balance</p>
-        <p className="text-2xl font-black text-[#FFB547]">Not available</p>
-        <p className="text-xs text-[#98A5BF]">The operator wallet owns this balance. Transaction history is not a substitute for its authoritative balance endpoint.</p>
+        <p className="text-2xl font-black text-[#FFB547]">{loading ? 'Checking…' : wallet?.balanceStatus === 'verified' && wallet.balanceMinor !== null
+          ? `${wallet.balanceMinor.toLocaleString('en-US')} COIN` : 'Not available'}</p>
+        <p className="text-xs text-[#98A5BF]">{wallet?.balanceStatus === 'verified'
+          ? 'Verified directly with the isolated operator Sandbox Wallet. COIN has no cash value.'
+          : 'A balance is shown only after the Sandbox Wallet confirms it. Ledger entries are not a substitute for a verified balance.'}</p>
       </div>
       <div className="p-5 rounded-2xl bg-[#121A2D] border border-[#233252] space-y-2">
         <p className="text-xs text-[#98A5BF] font-semibold uppercase">Provider sandbox</p>
-        <p className="text-xl font-bold text-white">{loading ? 'Checking…' : error ? 'Unavailable' : wallet?.configured ? 'Ledger scope selected' : 'Not configured'}</p>
-        <p className="text-xs text-[#98A5BF]">{wallet?.configured ? 'Read-only ledger access configured; live wallet availability is not verified' : 'Requires B2C_LAUNCH_PARTNER_ID on the backend'}</p>
+        <p className="text-xl font-bold text-white">{loading ? 'Checking…' : error ? 'Unavailable' : wallet?.balanceStatus === 'verified' ? 'Connected · fake COIN' : wallet?.configured ? 'Partner selected · balance read inactive' : 'Not configured'}</p>
+        <p className="text-xs text-[#98A5BF]">{wallet?.balanceStatus === 'verified' ? 'Balance refresh is read-only from this app; the isolated wallet may initialize fake credits for new accounts.' : wallet?.configured ? 'Enable the trusted COIN sandbox balance read on the backend.' : 'Requires B2C_LAUNCH_PARTNER_ID on the backend'}</p>
       </div>
     </div>
     {error && <Card><div role="alert" className="text-[#FFB547] text-sm">{error}</div></Card>}

@@ -30,7 +30,9 @@
     "test:launch-capabilities": "node --experimental-strip-types --test tests/patch19-launch-capabilities.test.mjs",
     "test:cleanup": "node --test tests/patch20-cleanup.test.mjs",
     "test:patch21": "node --test tests/patch21-release.test.mjs",
-    "release:verify": "npm run build && npm run preflight:netlify && node tools/patch21-release-preflight.mjs"
+    "release:verify": "npm run build && npm run preflight:netlify && node tools/patch21-release-preflight.mjs",
+    "test:patch22": "node --experimental-strip-types --test tests/patch22-fake-coin-wallet.test.mjs",
+    "test:patch24": "node --experimental-strip-types --test tests/patch24-multigame-pilot.test.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",
