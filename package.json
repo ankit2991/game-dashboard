@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node tools/patch14-ensure-netlify-redirects.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "test:auth-client": "node tools/patch2-auth-client-smoke.cjs",
@@ -19,7 +19,8 @@
     "test:admin": "node --test tests/patch10-admin.test.mjs",
     "test:release": "node --experimental-strip-types --test tests/patch12-release.test.mjs",
     "test:netlify": "node --test tests/patch14-netlify.test.mjs",
-    "preflight:netlify": "node tools/patch14-netlify-preflight.mjs"
+    "preflight:netlify": "node tools/patch14-ensure-netlify-redirects.mjs && node tools/patch14-netlify-preflight.mjs",
+    "netlify:fix": "node tools/patch14-ensure-netlify-redirects.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",

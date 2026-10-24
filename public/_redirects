@@ -1,0 +1,2 @@
+# Required for manual Netlify Drop deployments (not just Git-connected builds).
+/*    /index.html   200
