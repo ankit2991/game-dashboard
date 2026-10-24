@@ -66,3 +66,7 @@ Run `npm run test:admin`. Other Admin analytics pages remain placeholders pendin
 ## Patch 11 — safe Super Admin overview and configuration
 
 The Admin Dashboard, Analytics, Game Catalog Management, Settings and main Admin Layout no longer claim demo numbers or fictional system alerts. Data are read from three bearer-protected endpoints described in [PATCH_11_ADMIN_INSIGHTS_GUIDE.md](PATCH_11_ADMIN_INSIGHTS_GUIDE.md). Admin game/catalog/settings are read-only and must be changed through server deployment configuration. Verified analytics are point-in-time counts only.
+
+## Patch 12 — Release / FREE-tier deployment
+
+Use [PATCH_12_FINAL_RELEASE_GUIDE.md](PATCH_12_FINAL_RELEASE_GUIDE.md) for local integration, Render Free, Atlas M0 Free, Vercel, environment variables, and the read-only post-deployment smoke. Deep-link refreshes use `vercel.json`; production requires explicit `VITE_API_BASE_URL`. Do not treat a passing mock HTTP integration suite as proof of a live deployed Provider wallet.

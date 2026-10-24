@@ -16,7 +16,8 @@
     "test:operator": "node --experimental-strip-types --test tests/patch7-operator.test.mjs",
     "test:operator-workspace": "node --experimental-strip-types --test tests/patch8-operator-workspace.test.mjs",
     "test:operator-operations": "node --experimental-strip-types --test tests/patch9-operator-operations.test.mjs",
-    "test:admin": "node --test tests/patch10-admin.test.mjs"
+    "test:admin": "node --test tests/patch10-admin.test.mjs",
+    "test:release": "node --experimental-strip-types --test tests/patch12-release.test.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",
@@ -38,5 +39,8 @@
     "oxlint": "^1.88.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

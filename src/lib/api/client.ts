@@ -24,7 +24,10 @@ export class ApiError extends Error {
 /** Validate absolute backend URLs rather than accidentally sending secrets to a typo host. */
 export function resolveApiBase(raw: string | undefined, development: boolean): string {
   const configured = raw?.trim();
-  if (!configured) return API_PATH; // Vite /api proxy in local development.
+  if (!configured) {
+    if (!development) throw new Error('VITE_API_BASE_URL must be set to the Render HTTPS backend in production');
+    return API_PATH; // Vite /api proxy in local development.
+  }
   let url: URL;
   try { url = new URL(configured); }
   catch { throw new Error('VITE_API_BASE_URL must be an absolute HTTP(S) URL'); }
