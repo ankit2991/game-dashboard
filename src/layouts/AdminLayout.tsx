@@ -20,7 +20,15 @@ import {
   ExternalLink,
   Activity
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+type AdminNavigationItem = {
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  badge?: string;
+};
 
 export const AdminLayout: React.FC = () => {
   const location = useLocation();
@@ -31,7 +39,7 @@ export const AdminLayout: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  const navItems = [
+  const navItems: AdminNavigationItem[] = [
     { label: 'Overview', path: '/admin', icon: LayoutDashboard },
     { label: 'User Management', path: '/admin/users', icon: Users },
     { label: 'Operator Management', path: '/admin/operators', icon: Building2 },
