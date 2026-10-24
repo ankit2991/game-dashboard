@@ -6,7 +6,7 @@ export interface WalletOverview {
   currency: 'COIN' | null;
   decimals: 0 | null;
   balanceStatus: 'unavailable' | 'verified';
-  balanceSource?: 'operator_sandbox' | null;
+  balanceSource?: 'operator_sandbox' | 'provider_sandbox' | null;
   canDeposit: false;
   canWithdraw: false;
   transactionHistoryAvailable: boolean;
@@ -66,7 +66,7 @@ export function validateWalletOverview(data: WalletOverview): WalletOverview {
       (data.balanceStatus === 'verified' ?
         (!data.configured || !Number.isSafeInteger(data.balanceMinor) || data.balanceMinor === null ||
          data.balanceMinor < 0 || data.currency !== 'COIN' || data.decimals !== 0 ||
-         data.balanceSource !== 'operator_sandbox') :
+         !['operator_sandbox', 'provider_sandbox'].includes(data.balanceSource ?? '')) :
         (data.balanceMinor !== null || data.currency !== null || data.decimals !== null ||
          (data.balanceSource !== null && data.balanceSource !== undefined))) ||
       data.canDeposit !== false || data.canWithdraw !== false ||

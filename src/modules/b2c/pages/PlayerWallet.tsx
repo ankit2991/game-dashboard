@@ -22,14 +22,18 @@ export const PlayerWallet: React.FC = () => {
         <p className="text-2xl font-black text-[#FFB547]">{loading ? 'Checking…' : wallet?.balanceStatus === 'verified' && wallet.balanceMinor !== null
           ? `${wallet.balanceMinor.toLocaleString('en-US')} COIN` : 'Not available'}</p>
         <p className="text-xs text-[#98A5BF]">{wallet?.balanceStatus === 'verified'
-          ? 'Verified directly with the isolated operator Sandbox Wallet. COIN has no cash value.'
+          ? wallet.balanceSource === 'provider_sandbox'
+            ? 'Verified from the Game Provider MongoDB fake-COIN balance. COIN has no cash value.'
+            : 'Verified directly with the isolated operator Sandbox Wallet. COIN has no cash value.'
           : 'A balance is shown only after the Sandbox Wallet confirms it. Ledger entries are not a substitute for a verified balance.'}</p>
       </div>
       <div className="p-5 rounded-2xl bg-[#121A2D] border border-[#233252] space-y-2">
         <p className="text-xs text-[#98A5BF] font-semibold uppercase">Provider sandbox</p>
         <p className="text-xl font-bold text-white">{loading ? 'Checking…' : error ? 'Unavailable' : wallet?.balanceStatus === 'verified' ? 'Connected · fake COIN' : wallet?.configured ? 'Partner selected · balance read inactive' : 'Not configured'}</p>
         <p className="text-xs text-[#98A5BF]">{wallet?.balanceStatus === 'verified'
-          ? 'Balance verified by the isolated fake-COIN Sandbox Wallet.'
+          ? wallet.balanceSource === 'provider_sandbox'
+            ? 'Confirmed by the Game Provider sandbox database. Game wagering is not enabled yet.'
+            : 'Balance verified by the isolated fake-COIN Sandbox Wallet.'
           : wallet?.configurationBlockers?.length
             ? connectionHint(wallet.configurationBlockers[0])
             : wallet?.configured

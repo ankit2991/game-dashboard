@@ -16,8 +16,8 @@ export const ProviderManagement:React.FC=()=>{
     {error && <p role="alert" className="text-[#FF5D73] text-sm">Unable to retrieve integration diagnostics: {error}</p>}
     {data && <>
       <div className="border border-[#233252] rounded-lg bg-[#121A2D] p-4 space-y-2">
-        <div className="text-white font-semibold">Player Sandbox Wallet — {data.wallet.configurationReady ? 'Configuration complete; remote balance not verified' : 'Configuration blocked'}</div>
-        {!data.wallet.walletWritesEnabled && <div className="text-xs text-[#FFB547]">Sandbox wallet transactions are disabled on the backend.</div>}
+        <div className="text-white font-semibold">Player Sandbox Wallet — {data.wallet.configurationReady ? (data.wallet.balanceProvider === 'provider_sandbox' ? 'Internal MongoDB COIN wallet configured — check player balance to verify' : 'External wallet configured — remote balance not verified') : 'Configuration blocked'}</div>
+        {!data.wallet.walletWritesEnabled && <div className="text-xs text-[#FFB547]">Game betting and payout transactions are disabled. Patch 1 enables balance preview only.</div>}
         {data.wallet.blockers.length ? <ul className="list-disc list-inside text-xs text-[#FFB547] space-y-1">{data.wallet.blockers.map(code=><li key={code}>{connectionHint(code)}</li>)}</ul>
           : <p className="text-xs text-[#98A5BF]">Check the player's real read-only balance from the player portal and verify a separate game backend end-to-end before enabling launch.</p>}
       </div>

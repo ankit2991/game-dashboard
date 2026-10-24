@@ -2,7 +2,8 @@
 const HINTS: Record<string, string> = {
   B2C_PARTNER_NOT_SELECTED: 'Set B2C_LAUNCH_PARTNER_ID=operator_sandbox_1 on Render.',
   SANDBOX_PARTNER_REQUIRED: 'B2C requires the isolated operator_sandbox_1 fake-credit partner.',
-  B2C_PARTNER_NOT_FOUND: 'The selected partner is missing from PARTNERS_JSON or managed partners.',
+  B2C_PARTNER_NOT_FOUND: 'The selected partner is missing from PARTNERS_JSON (required for the built-in sandbox wallet).',
+  INTERNAL_SANDBOX_WALLET_INVALID: 'The internal sandbox wallet needs an authorized fake-COIN partner and MongoDB.',
   FAKE_WALLET_NOT_CONFIGURED: 'The selected partner has no wallet callback configuration.',
   UNSUPPORTED_FAKE_WALLET_CONFIGURATION: 'The selected wallet is not the approved fake-COIN sandbox wallet.',
   B2C_PARTNER_HAS_NO_GAMES: 'The sandbox partner must authorize at least one game.',
