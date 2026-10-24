@@ -10,6 +10,7 @@ export interface WalletOverview {
   canDeposit: false;
   canWithdraw: false;
   transactionHistoryAvailable: boolean;
+  configurationBlockers?: string[];
 }
 export type WalletOperation = 'bet' | 'win' | 'refund';
 export type WalletTransactionStatus = 'succeeded' | 'rejected' | 'inflight' | 'indeterminate';
@@ -69,7 +70,10 @@ export function validateWalletOverview(data: WalletOverview): WalletOverview {
         (data.balanceMinor !== null || data.currency !== null || data.decimals !== null ||
          (data.balanceSource !== null && data.balanceSource !== undefined))) ||
       data.canDeposit !== false || data.canWithdraw !== false ||
-      data.transactionHistoryAvailable !== data.configured) throw new Error('Invalid wallet summary response');
+      data.transactionHistoryAvailable !== data.configured ||
+      (data.configurationBlockers !== undefined &&
+        (!Array.isArray(data.configurationBlockers) || data.configurationBlockers.some(v => typeof v !== 'string' || !/^[A-Z_]{3,64}$/.test(v)))))
+      throw new Error('Invalid wallet summary response');
   return data;
 }
 export function validateTransactionPage(data: PlayerTransactionPage, offset: number, filters: TransactionFilters = DEFAULT_TRANSACTION_FILTERS): PlayerTransactionPage {

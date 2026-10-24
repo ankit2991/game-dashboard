@@ -37,7 +37,7 @@ export const GameManagement: React.FC = () => {
         <td className="p-3"><div className="flex items-center gap-2"><img src={getCatalogArtwork(g.gameId).icon ?? undefined} alt={`${g.name} icon`} className="w-10 h-10 object-contain rounded-lg bg-[#0B1020] shrink-0" loading="lazy"/><div><strong className="text-white">{g.name}</strong><div className="font-mono text-[11px]">{g.gameId}</div></div></div></td>
         <td className="p-3">{g.gameMode.replace('_',' ')}</td>
         <td className="p-3"><Badge variant={g.enabled?'success':'danger'}>{g.enabled?'Enabled':'Disabled'}</Badge></td>
-        <td className="p-3">{g.providerLaunchAvailable ? 'Adapter configured (not verified live)' : 'Not connected'}</td>
+        <td className="p-3">{g.providerLaunchAvailable ? 'Launch flag enabled (adapter not verified)' : 'Not connected'}</td>
         <td className="p-3">{g.demoUrl ? 'Configured' : 'Not configured'}</td>
       </tr>)}</tbody></table>{!shown.length && <p className="text-[#98A5BF] text-sm py-6 text-center">No matching games.</p>}</div></Card>
       <p className="text-xs text-[#FFB547]">Changes to enabled state, RTP and game rules are not supported through this admin API. No local-only edit or delete actions are presented.</p>

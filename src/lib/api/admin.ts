@@ -21,6 +21,12 @@ export interface AdminGame {
   gameId: string; name: string; gameMode: 'single_player' | 'multiplayer'; order: number;
   enabled: boolean; demoUrl: string | null; integrationStatus: string; providerLaunchAvailable: boolean;
 }
+export interface AdminIntegrationReport {
+  scope: 'configuration_only'; liveMoneySupported: false;
+  wallet: {configurationReady: boolean; remoteBalanceVerified: false; blockers: string[]; walletWritesEnabled: boolean};
+  games: {gameId: string; name: string; catalogEnabled: boolean; providerConfigurationReady: boolean;
+    browserGameWalletE2eVerified: false; status: 'configuration_blocked' | 'awaiting_game_backend_e2e'; blockers: string[]}[];
+}
 export interface AdminSettings {
   editableInPortal: false; configurationSource: 'server_environment'; environment: string;
   storeBackend: 'sqlite' | 'mongodb'; liveMoneySupported: false; corsOriginCount: number;
@@ -42,6 +48,8 @@ export const adminApi = {
     apiRequest<AdminOverview>('/admin/portal/overview', {accessToken, signal}),
   games: (accessToken: string, signal?: AbortSignal) =>
     apiRequest<{games: AdminGame[]}>('/admin/portal/games', {accessToken, signal}),
+  integrations: (accessToken: string, signal?: AbortSignal) =>
+    apiRequest<AdminIntegrationReport>('/admin/portal/integrations', {accessToken, signal}),
   settings: (accessToken: string, signal?: AbortSignal) =>
     apiRequest<AdminSettings>('/admin/portal/settings', {accessToken, signal}),
   players: (accessToken: string, limit = 20, offset = 0, signal?: AbortSignal) =>

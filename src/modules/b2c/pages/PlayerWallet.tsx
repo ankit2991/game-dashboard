@@ -5,6 +5,7 @@ import { Card, CardHeader } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { usePlayerWallet, usePlayerTransactions } from '../../../lib/wallet/usePlayerWallet';
 import { amountLabel } from '../../../lib/wallet/walletModel';
+import { connectionHint } from '../../../lib/launch/connectionLabels';
 
 export const PlayerWallet: React.FC = () => {
   const { wallet, loading, error, refresh } = usePlayerWallet();
@@ -27,7 +28,13 @@ export const PlayerWallet: React.FC = () => {
       <div className="p-5 rounded-2xl bg-[#121A2D] border border-[#233252] space-y-2">
         <p className="text-xs text-[#98A5BF] font-semibold uppercase">Provider sandbox</p>
         <p className="text-xl font-bold text-white">{loading ? 'Checking…' : error ? 'Unavailable' : wallet?.balanceStatus === 'verified' ? 'Connected · fake COIN' : wallet?.configured ? 'Partner selected · balance read inactive' : 'Not configured'}</p>
-        <p className="text-xs text-[#98A5BF]">{wallet?.balanceStatus === 'verified' ? 'Balance refresh is read-only from this app; the isolated wallet may initialize fake credits for new accounts.' : wallet?.configured ? 'Enable the trusted COIN sandbox balance read on the backend.' : 'Requires B2C_LAUNCH_PARTNER_ID on the backend'}</p>
+        <p className="text-xs text-[#98A5BF]">{wallet?.balanceStatus === 'verified'
+          ? 'Balance verified by the isolated fake-COIN Sandbox Wallet.'
+          : wallet?.configurationBlockers?.length
+            ? connectionHint(wallet.configurationBlockers[0])
+            : wallet?.configured
+              ? 'Backend partner is selected; wallet service has not been verified.'
+              : 'B2C sandbox partner must be configured on the backend.'}</p>
       </div>
     </div>
     {error && <Card><div role="alert" className="text-[#FFB547] text-sm">{error}</div></Card>}
