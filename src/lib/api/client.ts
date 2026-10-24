@@ -4,7 +4,8 @@ import type { ApiEnvelope } from './types';
  * Browser-safe transport. No partner API key, game adapter key or B2B admin key
  * may ever be placed in VITE_* variables or passed by browser callers.
  */
-const DEFAULT_TIMEOUT_MS = 10000;
+// Render Free can cold-start after inactivity. Avoid aborting valid login requests at 10s.
+const DEFAULT_TIMEOUT_MS = 60000;
 const API_PATH = '/api/v1';
 
 export class ApiError extends Error {

@@ -1,0 +1,16 @@
+# Patch 14 — Netlify deployment from the FE/ folder.
+# If this FE directory is the repository root, this configuration is used as-is.
+# When connecting a monorepo, set Netlify Base directory = FE.
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22.16.0"
+
+# Same fallback is also provided in public/_redirects for Netlify Drop uploads.
+# Route all React Router deep links back to the SPA without rewriting assets.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

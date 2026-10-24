@@ -1,3 +1,5 @@
+> **Live Netlify instructions (Patch 14):** See [`PATCH_14_NETLIFY_RENDER_GUIDE.md`](PATCH_14_NETLIFY_RENDER_GUIDE.md). Upload the built `dist/`, not the full integration ZIP.
+
 # Game Dashboard — Frontend (Cumulative Integration Patch 11)
 
 React + TypeScript + Vite. This is the complete cumulative FE: Patch 1 API foundation, Patch 2 player auth, Patch 3 live catalog, Patch 4 browser-safe launch, and Patch 5 verified leaderboard and real B2C profile. Operator registration and approval are connected; Patch 11 adds backend-backed Super Admin overview, analytics snapshot, catalog management and read-only settings. Other inherited Admin pages may still contain prototypes. B2C wallet activity is a read-only view of the operator-scoped sandbox ledger; balances and payments are unavailable until an authoritative wallet API exists.
