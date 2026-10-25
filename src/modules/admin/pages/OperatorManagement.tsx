@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Building2, Search, RefreshCw, ShieldCheck, ShieldAlert } from 'lucide-react';
+import {Link} from 'react-router-dom';
 import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
@@ -53,8 +54,8 @@ export const OperatorManagement: React.FC = () => {
       const access = await getAdminAccessToken();
       if (!access) throw new Error('Your admin session expired. Sign in again.');
       const {operator} = await adminApi.decision(access, selection.operator.id, selection.action);
-      setOperators(all => all.map(op => op.id === operator.id ? operator : op));
-      setMessage(`${operator.companyName}: ${operator.status}. No API key has been issued.`);
+      await reload();
+      setMessage(`${operator.companyName}: ${operator.status}. Check API Key Management for actual partner status.`);
       setSelection(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to update operator status.');
@@ -65,7 +66,7 @@ export const OperatorManagement: React.FC = () => {
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#233252]">
       <div><h1 className="text-2xl font-bold text-white flex gap-2 items-center"><Building2 className="w-6 h-6 text-[#00D4FF]"/>B2B Operator Approvals</h1>
-        <p className="text-xs text-[#98A5BF] mt-1">Server-verified applications and approval decisions. Production provisioning is separate.</p></div>
+        <p className="text-xs text-[#98A5BF] mt-1">Review applications and account status. Manage partner credentials separately under API Key Management.</p></div>
       <Button variant="outline" size="sm" onClick={() => void reload()} leftIcon={<RefreshCw className="w-4 h-4"/>}>Refresh</Button>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -86,13 +87,16 @@ export const OperatorManagement: React.FC = () => {
         <div className="overflow-x-auto"><table className="w-full text-xs text-left text-[#98A5BF]">
           <thead><tr className="border-b border-[#233252]">
             <th className="p-3">Company</th><th className="p-3">Contact</th><th className="p-3">Country</th>
-            <th className="p-3">Approval</th><th className="p-3">API Key</th><th className="p-3">Actions</th></tr></thead>
+            <th className="p-3">Approval</th><th className="p-3">Selected / Allowed Games</th><th className="p-3">Partner API</th><th className="p-3">Actions</th></tr></thead>
           <tbody>{visible.map(op => <tr key={op.id} className="border-b border-[#233252]/60">
             <td className="p-3"><strong className="text-white">{op.companyName}</strong><p className="text-[11px] break-all">{op.website}</p></td>
             <td className="p-3">{op.contactPerson}<p className="text-[11px]">{op.email}</p></td>
             <td className="p-3">{op.country}</td>
             <td className="p-3"><Badge variant={op.status === 'approved' ? 'success' : op.status === 'pending' ? 'warning' : 'danger'}>{op.status}</Badge></td>
-            <td className="p-3">{op.partnerProvisioned ? 'Provisioned' : 'Not provisioned'}</td>
+            <td className="p-3">{op.selectedGames?.length ?? 0} / {op.allowedGames?.length ?? 0}
+              {op.syncRequired && <p className="text-[#FFB547]">Sync required</p>}</td>
+            <td className="p-3">{op.partnerProvisioned ? (op.partnerStatus === 'active' ? 'Active' : 'Suspended') : 'Not provisioned'}
+              {op.rotationRequestedAt && <p className="text-[#FFB547]">Rotation requested</p>}</td>
             <td className="p-3"><div className="flex gap-2 flex-wrap">{actionsFor(op.status).map(({action,label}) =>
               <Button key={action} size="sm" variant={action === 'approve' ? 'primary' : 'outline'}
                 onClick={() => setSelection({operator:op, action, label})}>{label}</Button>)}</div></td>
@@ -101,7 +105,8 @@ export const OperatorManagement: React.FC = () => {
         </div>}
     </Card>
     <div className="flex gap-2 text-xs text-[#98A5BF] items-start"><ShieldAlert className="w-4 h-4 shrink-0 text-[#FFB547]"/>
-      These actions change approval status only. They do not verify regulatory documents, create Partner keys, or enable live money.</div>
+      Approval and partner API access are separate. Open API Key Management for provisioning, game sync, and activation. Live money is not supported.</div>
+    <p className="text-xs text-[#98A5BF]">For provisioning, key rotation, and partner access controls go to <Link to="/admin/api-keys" className="text-[#00D4FF] underline">API Key Management</Link>.</p>
     <Modal isOpen={Boolean(selection)} onClose={() => !working && setSelection(null)} title="Confirm operator status change" maxWidth="md"
       footer={<div className="flex gap-2 justify-end"><Button variant="outline" onClick={() => setSelection(null)}>Cancel</Button>
         <Button variant="primary" isLoading={working} onClick={() => void decide()} leftIcon={<ShieldCheck className="w-4 h-4"/>}>Confirm</Button></div>}>

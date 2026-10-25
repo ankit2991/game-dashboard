@@ -7,7 +7,11 @@ export interface AdminSession { user: AdminProfile; accessToken: string; refresh
 export interface AdminOperator { id: string; email: string; companyName: string; contactPerson: string;
   website: string; phone: string; country: string; businessType: string;
   registrationNumber: string; status: 'pending' | 'approved' | 'rejected' | 'suspended';
-  createdAt: string; updatedAt: string; partnerProvisioned: boolean }
+  createdAt: string; updatedAt: string; partnerProvisioned: boolean;
+  partnerId?: string | null; partnerStatus?: 'active' | 'suspended' | null;
+  selectedGames?: string[]; allowedGames?: string[]; syncRequired?: boolean;
+  rotationRequestedAt?: string | null; keyRotatedAt?: string | null; partnerAccessPaused?: boolean;
+  credentialClaimedAt?: string | null; gamesRequestedAt?: string | null }
 export interface AdminOverview {
   generatedAt: string;
   operators: {total: number; pending: number; approved: number; rejected: number; suspended: number};
@@ -40,6 +44,11 @@ export interface AdminTransaction {transaction_id:string; partner_id:string; gam
   currency:string; status:string; created_ms:number; updated_ms:number}
 export interface AdminTransactionsPage {total:number; rows:AdminTransaction[]; sandboxOnly:true}
 export type AdminDecision = 'approve' | 'reject' | 'suspend' | 'reopen';
+export type AdminKeyAction = 'provision' | 'sync-games' | 'rotate-key' | 'suspend-key' | 'activate-key';
+export interface AdminPartner { id:string; displayName:string; allowedGames:string[]; status:'active'|'suspended'; walletConfigured:boolean }
+export interface AdminKeyActionResult { partner: AdminPartner; apiKey?:string; keyShownOnce?:true;
+  operator?:AdminOperator; note?:string }
+
 export const adminApi = {
   login: (email: string, password: string) => apiRequest<AdminSession>('/admin/auth/login', {method: 'POST', body: {email, password}}),
   refresh: (refreshToken: string) => apiRequest<AdminSession>('/admin/auth/refresh', {method: 'POST', body: {refreshToken}}),
@@ -59,6 +68,14 @@ export const adminApi = {
     apiRequest<AdminTransactionsPage>('/admin/portal/transactions', {accessToken, signal, query:{limit,offset}}),
   operators: (accessToken: string, signal?: AbortSignal) =>
     apiRequest<{operators: AdminOperator[]; total: number}>('/admin/portal/operators', {accessToken, signal}),
+  manageKey: (accessToken: string, id: string, action: AdminKeyAction, password?:string) => {
+    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Invalid operator ID');
+    if (['provision','rotate-key','activate-key'].includes(action) && !password) {
+      throw new Error('Administrator password is required.');
+    }
+    return apiRequest<AdminKeyActionResult>(`/admin/portal/operators/${id}/${action}`,
+      {method:'POST', accessToken, ...(password ? {body:{password}} : {})});
+  },
   decision: (accessToken: string, id: string, action: AdminDecision) => {
     if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Invalid operator ID');
     return apiRequest<{operator: AdminOperator}>(`/admin/portal/operators/${id}/${action}`, {method: 'POST', accessToken});

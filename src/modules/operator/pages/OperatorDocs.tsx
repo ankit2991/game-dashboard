@@ -3,7 +3,7 @@ import { BookOpen, Copy, ExternalLink, LockKeyhole, ShieldCheck } from 'lucide-r
 import { apiBaseUrl } from '../../../lib/api/client';
 
 /** Human-readable reference matching the checked-in OpenAPI contract.
- * Partner/API-adapter secrets are NEVER supplied by React. */
+ * Partner API secrets are only shown through a deliberate one-time password-confirmed claim. They are NEVER inserted in example requests or saved by React. */
 export const OperatorDocs: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const examples = [
@@ -49,7 +49,7 @@ export const OperatorDocs: React.FC = () => {
     </div>
     <div className="rounded-xl bg-[#182238] border border-[#233252] p-4 space-y-2">
       <div className="flex items-center gap-2 text-white font-medium"><ShieldCheck className="w-5 h-5 text-[#20C997]"/>Sandbox only — no live-money support</div>
-      <p className="text-sm text-[#98A5BF]">Operator accounts and Partner API keys are separate. Approval of an Operator or selection of a game does not automatically provision or expose a Partner key. Wallet transactions require a separately authorized server-side adapter and sandbox operator wallet.</p>
+      <p className="text-sm text-[#98A5BF]">Operator accounts and Partner API keys are separate. Admin must approve the requested games and provision a Partner. The operator can then securely claim a newly rotated API key once on the Credentials page. Wallet transactions require a separately authorized server-side adapter and sandbox operator wallet.</p>
       <p className="text-xs text-[#98A5BF] break-all">API base: <code>{apiBaseUrl}</code></p>
     </div>
     <div className="space-y-4">{examples.map(item => <section key={item.name} className="rounded-xl border border-[#233252] bg-[#121A2D] p-5 space-y-3">

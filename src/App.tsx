@@ -28,6 +28,7 @@ import { OperatorCatalog } from './modules/operator/pages/OperatorCatalog';
 import { OperatorMyGames } from './modules/operator/pages/OperatorMyGames';
 import { OperatorCredentials } from './modules/operator/pages/OperatorCredentials';
 import { OperatorDocs } from './modules/operator/pages/OperatorDocs';
+import { OperatorIntegration } from './modules/operator/pages/OperatorIntegration';
 import { OperatorLogs } from './modules/operator/pages/OperatorLogs';
 import { OperatorWebhooks } from './modules/operator/pages/OperatorWebhooks';
 import { OperatorTransactions } from './modules/operator/pages/OperatorTransactions';
@@ -134,6 +135,7 @@ export function App() {
             <Route path="catalog" element={<OperatorCatalog />} />
             <Route path="my-games" element={<OperatorMyGames />} />
             <Route path="credentials" element={<OperatorCredentials />} />
+            <Route path="integration" element={<OperatorIntegration />} />
             <Route path="docs" element={<OperatorDocs />} />
             <Route path="logs" element={<OperatorLogs />} />
             <Route path="webhooks" element={<OperatorWebhooks />} />

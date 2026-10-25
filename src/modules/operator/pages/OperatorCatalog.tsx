@@ -5,9 +5,10 @@ import { Button } from '../../../components/ui/Button';
 import { useOperatorWorkspace } from '../../../lib/operator/useOperatorWorkspace';
 import { getCatalogArtwork } from '../../../lib/catalog/catalogModel';
 import { makeSelection } from '../../../lib/operator/workspaceModel';
+import { gameActivationLabel } from '../../../lib/operator/integrationModel';
 
 export const OperatorCatalog: React.FC = () => {
-  const { games, selectedGames, loading, saving, error, update, refresh } = useOperatorWorkspace();
+  const { games, selectedGames, integration, loading, saving, error, update, refresh } = useOperatorWorkspace();
   const [search, setSearch] = useState('');
   const [mode, setMode] = useState<'all' | 'single_player' | 'multiplayer'>('all');
   const [message, setMessage] = useState('');
@@ -15,7 +16,7 @@ export const OperatorCatalog: React.FC = () => {
     (g.name.toLowerCase().includes(search.toLowerCase()) || g.gameId.includes(search.toLowerCase())));
   async function toggle(id: string) {
     setMessage('');
-    try { await update(makeSelection(selectedGames, id, games)); setMessage('Selection saved. Administrator sync is required to change live partner permissions.'); }
+    try { await update(makeSelection(selectedGames, id, games)); setMessage('Game request saved. Admin approval/sync is required before API authorization changes.'); }
     catch { /* Error is presented by hook. */ }
   }
   return <div className="space-y-6">
@@ -38,7 +39,8 @@ export const OperatorCatalog: React.FC = () => {
       return <Card key={game.gameId} className="flex flex-col gap-3">
         <div className="h-28 rounded-xl flex items-center justify-center bg-[#0B1020]" style={{color: art.accent}}><img src={art.icon ?? undefined} alt={`${game.name} icon`} className="h-full w-full object-contain p-2" loading="lazy" /></div>
         <div><h2 className="text-white font-semibold">{game.name}</h2><p className="text-[#98A5BF] text-xs font-mono">{game.gameId} · {game.gameMode.replace('_',' ')}</p></div>
-        <p className="text-[#98A5BF] text-xs">{game.providerLaunchAvailable ? 'Adapter marked configured; wallet readiness must be verified.' : 'Catalog listed; provider adapter not connected.'}</p>
+        <p className="text-[#00D4FF] text-xs font-semibold">{gameActivationLabel(integration?.games.find(g => g.gameId === game.gameId))}</p>
+        <p className="text-[#98A5BF] text-xs">API authorization and successful wallet/game launch are separate. This status is configuration-only.</p>
         <Button variant={chosen ? 'outline' : 'cyan'} size="sm" disabled={saving || loading} onClick={() => void toggle(game.gameId)} leftIcon={chosen ? <Check className="w-4 h-4"/> : <Plus className="w-4 h-4"/>}>{chosen ? 'Remove selection' : 'Select game'}</Button>
       </Card>;
     })}</div>

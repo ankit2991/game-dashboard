@@ -23,7 +23,8 @@ import {
   BookOpen,
   Code2,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Workflow
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Badge } from '../components/ui/Badge';
@@ -45,6 +46,7 @@ export const OperatorLayout: React.FC = () => {
     { label: 'Game Marketplace', path: '/operator/catalog', icon: Gamepad2 },
     { label: 'My Selected Games', path: '/operator/my-games', icon: CheckCircle },
     { label: 'API Credentials', path: '/operator/credentials', icon: KeyRound },
+    { label: 'Integration Setup', path: '/operator/integration', icon: Workflow },
     { label: 'Developer API Docs', path: '/operator/docs', icon: FileCode2, highlight: true },
     { label: 'Integration Logs', path: '/operator/logs', icon: Terminal },
     { label: 'Sandbox Transactions', path: '/operator/transactions', icon: ArrowLeftRight },

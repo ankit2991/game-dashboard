@@ -50,7 +50,25 @@ export const operatorApi = {
     apiRequest<{ user: OperatorProfile }>('/operator/me', { accessToken }),
 };
 
-/** No private Partner API key is ever returned by these browser endpoints. */
+/** GET endpoints never return partner keys. The deliberate one-time claim POST
+ * returns a newly rotated key in a no-store response for immediate secure storage. */
+export type OperatorGameActivation = 'not_selected' | 'provisioning_pending' | 'approval_pending' |
+  'access_suspended' | 'backend_setup_required' | 'authorized_config_only' | 'removal_pending';
+export interface OperatorIntegrationGame {
+  gameId: string; name: string; requested: boolean; authorized: boolean;
+  backendConfigured: boolean; state: OperatorGameActivation; walletE2eVerified: false;
+}
+export interface OperatorIntegration {
+  scope: 'configuration_only'; liveMoneySupported: false; walletE2eVerified: false;
+  endToEndVerified: false; operatorStatus: OperatorStatus; provisioned: boolean;
+  partnerId: string | null; partnerStatus: string | null; apiAuthorizationActive: boolean;
+  credentialClaimedAt: string | null; credentialClaimableOnce: boolean;
+  selectedGames: string[]; authorizedGames: string[]; syncRequired: boolean;
+  games: OperatorIntegrationGame[];
+}
+export interface OperatorClaimedKey { partnerId: string; apiKey: string; revealedOnce: true;
+  oldKeyRevoked: true; claimedAt: string }
+
 export interface OperatorGame {
   gameId: string; name: string; gameMode: 'single_player' | 'multiplayer';
   providerLaunchAvailable: boolean; integrationStatus: string; demoUrl: string | null; order: number;
@@ -61,6 +79,7 @@ export interface OperatorCredentials {
     source: string; walletConfigured: boolean; createdAt: string | null; updatedAt: string | null };
   selectedGames: string[]; syncRequired: boolean; rotationRequestedAt: string | null;
   keyRetrievableInBrowser: false; liveMoneySupported: false;
+  credentialClaimedAt: string | null; credentialClaimableOnce: boolean;
 }
 export const operatorWorkspaceApi = {
   catalog: (token: string, signal?: AbortSignal) =>
@@ -71,6 +90,10 @@ export const operatorWorkspaceApi = {
     apiRequest<{ selectedGames: string[]; note: string }>('/operator/games', { method: 'POST', body: { gameIds }, accessToken: token }),
   credentials: (token: string, signal?: AbortSignal) =>
     apiRequest<OperatorCredentials>('/operator/credentials', { accessToken: token, signal }),
+  integration: (token: string, signal?: AbortSignal) =>
+    apiRequest<OperatorIntegration>('/operator/integration', { accessToken: token, signal }),
+  claimKey: (token: string, password: string) =>
+    apiRequest<OperatorClaimedKey>('/operator/credentials/claim', { method: 'POST', accessToken: token, body: { password } }),
   requestRotation: (token: string) =>
     apiRequest<{ rotationRequestedAt: string; pending: true }>('/operator/credentials/rotation-request', { method: 'POST', body: {}, accessToken: token }),
 };
