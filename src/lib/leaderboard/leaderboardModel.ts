@@ -1,4 +1,4 @@
-/** Pseudonymous operator-scoped player rankings from verified COIN payouts. */
+/** Public B2C usernames when verified, otherwise operator-scoped anonymous labels. */
 export interface LeaderboardEntry {
   rank: number;
   player: { label: string };
@@ -21,6 +21,8 @@ export interface LeaderboardListing {
 }
 
 const nonnegative = (x: unknown) => Number.isSafeInteger(x) && (x as number) >= 0;
+const publicPlayerLabel = (label: string) =>
+  /^[a-zA-Z0-9_]{3,24}$/.test(label) || /^Player-[a-f0-9]{10}$/.test(label);
 export const PAGE_SIZE = 20;
 
 export function validateLeaderboardListing(value: unknown, expectedGameId: string | null, offset: number): LeaderboardListing {
@@ -38,7 +40,7 @@ export function validateLeaderboardListing(value: unknown, expectedGameId: strin
     const entry = list.entries[i];
     if (!entry || entry.rank !== offset + i + 1 ||
         !entry.player || typeof entry.player.label !== 'string' ||
-        !/^Player-[a-f0-9]{10}$/.test(entry.player.label) ||
+        !publicPlayerLabel(entry.player.label) ||
         ![entry.winningRounds, entry.bestPayoutMinor, entry.totalPayoutMinor].every(nonnegative) ||
         entry.winningRounds < 1 || entry.bestPayoutMinor < 1 ||
         entry.totalPayoutMinor < entry.bestPayoutMinor ||

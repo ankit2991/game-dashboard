@@ -14,8 +14,15 @@ test('global and per-game query use backend-supported parameters and constrain o
   for(const invalid of [-20,1,1001,Infinity]) assert.throws(()=>getLeaderboardQuery(null,invalid),/Invalid/);
 });
 
-test('verified listing accepts only public pseudonyms and verified COIN winnings', () => {
+test('verified listing accepts verified B2C usernames or anonymous labels, and verified COIN winnings', () => {
   assert.equal(validateLeaderboardListing(global,null,0).entries[0].player.label,'Player-123456789a');
+  for (const username of ['cr5213123', 'Player_009', 'abc']) {
+    assert.equal(validateLeaderboardListing({...global, entries: [{...entry, player: {label: username}}]},null,0)
+      .entries[0].player.label, username);
+  }
+  for (const invalid of ['Alice@example.com', 'xy', 'x'.repeat(25), '<script>', 'bad-name', '']) {
+    assert.throws(()=>validateLeaderboardListing({...global,entries:[{...entry,player:{label:invalid}}]},null,0),/Invalid/);
+  }
   const game={...global,scope:'game',gameId:'pinball'};
   assert.equal(validateLeaderboardListing(game,'pinball',0).entries[0].winningRounds,4);
   assert.throws(()=>validateLeaderboardListing({...global,entries:[{...entry,player:{label:'Alice@example.com'}}]},null,0),/Invalid/);

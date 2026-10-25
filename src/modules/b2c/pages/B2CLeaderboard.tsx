@@ -29,7 +29,7 @@ export const B2CLeaderboard: React.FC = () => {
         <Badge variant="purple" size="md">Verified COIN payouts</Badge>
         <h1 className="text-3xl sm:text-4xl font-black font-display text-white">Game Provider Leaderboard</h1>
         <p className="text-sm text-[#98A5BF] max-w-2xl mx-auto">
-          Rankings reflect the largest confirmed COIN payout in one round. Player names are pseudonymous.
+          Rankings reflect the largest confirmed COIN payout in one round. Registered player usernames appear when verified.
           There are no cash prizes or daily tournaments attached to this leaderboard.
         </p>
       </div>
@@ -119,7 +119,7 @@ export const B2CLeaderboard: React.FC = () => {
           </Card>
         </>
       ) : null}
-      <p className="text-center text-xs text-[#64748B] max-w-3xl mx-auto">Player labels are pseudonymous. Each ranking groups the same operator account across games, using verified wallet settlements only. COIN is sandbox currency, not withdrawable cash.</p>
+      <p className="text-center text-xs text-[#64748B] max-w-3xl mx-auto">Registered B2C usernames are public on this leaderboard. Players without a verified B2C link use anonymous labels. Each ranking groups the same operator account across games, using verified wallet settlements only. COIN is sandbox currency, not withdrawable cash.</p>
     </div>
   );
 };

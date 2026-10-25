@@ -11,6 +11,6 @@ test('Patch 6 accepts verified COIN money rankings, preserves pagination and rej
  for(const change of [
   {sort:'wins'},{currency:'USD'},{decimals:2},{source:'submitted_scores'},
   {entries:[{...entry,score:10000}]},{entries:[{...entry,bestPayoutMinor:-2}]},
-  {entries:[{...entry,totalPayoutMinor:4}]},{entries:[{...entry,player:{label:'Alice'}}]},
+  {entries:[{...entry,totalPayoutMinor:4}]},{entries:[{...entry,player:{label:'x'}}]},
  ]) assert.throws(()=>validateLeaderboardListing({...listing,...change},null,0),/Invalid/);
 });

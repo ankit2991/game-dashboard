@@ -135,7 +135,7 @@ export const PlayerOverview: React.FC = () => {
             <Link to="/leaderboard"><Button variant="outline" size="sm" leftIcon={<Trophy className="w-4 h-4" />}>Public Leaderboard</Button></Link>
             <Link to="/player/wallet"><Button variant="outline" size="sm" leftIcon={<Wallet className="w-4 h-4" />}>Sandbox Wallet</Button></Link>
           </div>
-          <p className="text-xs text-[#64748B] mt-4">Public game rankings do not identify individual B2C accounts.</p>
+          <p className="text-xs text-[#64748B] mt-4">Your username may appear publicly on the leaderboard after confirmed winning rounds.</p>
         </Card>
       </div>
 
