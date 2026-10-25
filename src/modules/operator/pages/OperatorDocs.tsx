@@ -33,6 +33,16 @@ export const OperatorDocs: React.FC = () => {
       code: `curl -X POST "${apiBaseUrl}/launch/consume" \\\n  -H 'X-Game-Adapter-Key: <GAME_ADAPTER_KEY>' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"gameId":"pinball","launchToken":"<LAUNCH_TOKEN>","exchangeId":"exchange_00123456"}'`,
     },
     {
+      name: 'Operator sandbox wallet status',
+      about: 'Use your logged-in Operator access token. This reports only the configured host and verification state, never secrets. A successful balance check is not end-to-end proof.',
+      code: `GET ${apiBaseUrl}/operator/wallet`,
+    },
+    {
+      name: 'Submit fake-COIN wallet for approval',
+      about: 'Use the Integration Setup form in your Operator portal rather than pasting secret keys into public examples. Enter an approved HTTPS host, private wallet callback key and Operator password. The backend encrypts the secret; the Admin then performs a read-only Balance Check.',
+      code: `POST ${apiBaseUrl}/operator/wallet\nContent-Type: application/json\nAuthorization: Bearer <OPERATOR_ACCESS_TOKEN>\n{"baseUrl":"https://approved-wallet-host","apiKey":"<PRIVATE_KEY>","currency":"COIN","decimals":0,"timeoutMs":5000,"password":"<YOUR_PASSWORD>"}`,
+    },
+    {
       name: 'Browser sandbox availability (public, read-only)',
       about: 'Reports whether handoff configuration exists for each game. It does NOT verify that the game backend has consumed tickets or that money can be settled.',
       code: `GET ${apiBaseUrl}/player/launch-options`,

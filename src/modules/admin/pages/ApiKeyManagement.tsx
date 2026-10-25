@@ -9,8 +9,9 @@ import {Modal} from '../../../components/ui/Modal';
 const labels:Record<AdminKeyAction,string> = {
   'provision':'Provision Partner', 'sync-games':'Sync Games', 'rotate-key':'Rotate API Key',
   'suspend-key':'Suspend API', 'activate-key':'Activate API',
+  'verify-wallet':'Verify Wallet Balance', 'reject-wallet':'Reject Wallet',
 };
-const confirmPassword = new Set<AdminKeyAction>(['provision','rotate-key','activate-key']);
+const confirmPassword = new Set<AdminKeyAction>(['provision','rotate-key','activate-key','verify-wallet','reject-wallet']);
 
 /** Credentials are not persisted to localStorage/sessionStorage/logs or React query caches.
  * A newly generated Partner API key is displayed once and cleared when dismissed. */
@@ -35,7 +36,7 @@ export const ApiKeyManagement:React.FC=()=>{
       const result=await adminApi.manageKey(access,op.id,action,confirmPassword.has(action)?password:undefined);
       setPassword('');setSelection(null);
       if(result.apiKey){
-        setIssued({company:op.companyName,key:result.apiKey,partnerId:result.partner.id});
+        setIssued({company:op.companyName,key:result.apiKey,partnerId:result.partner?.id || ''});
       }else{
         setNotice(`${op.companyName}: ${labels[action]} completed.`);
       }
@@ -55,6 +56,7 @@ export const ApiKeyManagement:React.FC=()=>{
       ...(op.syncRequired?['sync-games' as const]:[]),
       ...(op.partnerStatus==='active'?['suspend-key' as const]:op.allowedGames?.length?['activate-key' as const]:[]),
       'rotate-key',
+      ...(op.wallet?.status === 'pending' ? ['verify-wallet' as const, 'reject-wallet' as const] : []),
     ];
   };
   return <div className="space-y-5">
@@ -71,7 +73,7 @@ export const ApiKeyManagement:React.FC=()=>{
     {notice&&<p role="status" className="text-[#20C997] text-sm">{notice}</p>}
     {loading&&<p role="status" className="text-[#98A5BF] text-sm">Loading partner state…</p>}
     {data&&<div className="border border-[#233252] rounded-xl bg-[#121A2D] overflow-x-auto"><table className="w-full text-left text-xs">
-      <thead className="text-[#98A5BF] border-b border-[#233252]"><tr><th className="p-3">Operator</th><th className="p-3">Account</th><th className="p-3">Partner API</th><th className="p-3">Selected / Allowed</th><th className="p-3">Key</th><th className="p-3">Actions</th></tr></thead>
+      <thead className="text-[#98A5BF] border-b border-[#233252]"><tr><th className="p-3">Operator</th><th className="p-3">Account</th><th className="p-3">Partner API</th><th className="p-3">Selected / Allowed</th><th className="p-3">Wallet Sandbox</th><th className="p-3">Key</th><th className="p-3">Actions</th></tr></thead>
       <tbody className="text-[#CDD6E8]">{data.operators.map(op=><tr key={op.id} className="border-b border-[#233252]/50">
         <td className="p-3"><strong className="text-white">{op.companyName}</strong><p className="break-all mt-1">{op.email}</p></td>
         <td className="p-3">{op.status}</td>
@@ -80,6 +82,10 @@ export const ApiKeyManagement:React.FC=()=>{
         <td className="p-3">{(op.selectedGames||[]).join(', ')||'None selected'}
           <p className="text-[#98A5BF] mt-1">Allowed: {(op.allowedGames||[]).join(', ')||'None'}</p>
           {op.syncRequired&&<span className="text-[#FFB547]">Game approval pending</span>}</td>
+        <td className="p-3">{op.wallet?.status || 'not_configured'}
+          {op.wallet?.host && <p className="text-[10px] mt-1">Host: {op.wallet.host}</p>}
+          {op.wallet?.failureCode && <p className="text-[#FFB547] text-[10px]">{op.wallet.failureCode}</p>}
+          <p className="text-[10px]">Balance check only / no E2E proof</p></td>
         <td className="p-3">{op.partnerProvisioned?'Issued (hidden)':'Not issued'}
           {op.rotationRequestedAt&&<p className="text-[#FFB547]">Rotation requested</p>}
           {op.credentialClaimedAt&&<p className="text-[#20C997]">Claimed by operator</p>}
@@ -93,6 +99,8 @@ export const ApiKeyManagement:React.FC=()=>{
       footer={<div className="flex gap-2"><Button variant="outline" disabled={busy} onClick={close}>Cancel</Button>
         <Button variant="primary" isLoading={busy} disabled={confirmPassword.has(selection?.action || 'sync-games')&&!password} onClick={()=>void doAction()}>Confirm</Button></div>}>
       <p>Execute <strong>{selection&&labels[selection.action]}</strong> for <strong>{selection?.op.companyName}</strong>?</p>
+      {selection?.action==='verify-wallet'&&<p className="text-[#FFB547] mt-3 text-xs">This performs ONE authorized fake-COIN balance read, not a bet, win, refund or E2E launch. It may initialize a test balance at the wallet provider. The destination must be allowlisted on the backend.</p>}
+      {selection?.action==='reject-wallet'&&<p className="text-[#FFB547] mt-3 text-xs">Rejecting revokes wallet runtime authorization. It does not settle pending wallet transactions. The operator must submit a new configuration.</p>}
       {selection?.action==='rotate-key'&&<p className="text-[#FFB547] mt-3 text-xs">The old Partner API key will stop working immediately. Coordinate secure delivery with the operator. Initial operator self-claim is possible once only.</p>}
       {selection?.action==='sync-games'&&<p className="text-[#FFB547] mt-3 text-xs">This replaces allowed games with the current operator selections. Removed games lose authorization immediately.</p>}
       {selection?.action==='suspend-key'&&<p className="text-[#FFB547] mt-3 text-xs">Existing API requests will be denied until reactivated.</p>}

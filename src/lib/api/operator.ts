@@ -65,6 +65,13 @@ export interface OperatorIntegration {
   credentialClaimedAt: string | null; credentialClaimableOnce: boolean;
   selectedGames: string[]; authorizedGames: string[]; syncRequired: boolean;
   games: OperatorIntegrationGame[];
+  wallet?: OperatorWalletStatus;
+}
+export interface OperatorWalletStatus {
+  featureEnabled: boolean; configured: boolean; status: 'not_configured' | 'pending' | 'verified' | 'failed' | 'rejected';
+  host: string | null; requestedAt: string | null; verifiedAt: string | null;
+  lastCheckedAt: string | null; failureCode: string | null;
+  currency: 'COIN'; decimals: 0; balanceProbeOnly: true; walletE2eVerified: false; liveMoneySupported: false;
 }
 export interface OperatorClaimedKey { partnerId: string; apiKey: string; revealedOnce: true;
   oldKeyRevoked: true; claimedAt: string }
@@ -92,6 +99,11 @@ export const operatorWorkspaceApi = {
     apiRequest<OperatorCredentials>('/operator/credentials', { accessToken: token, signal }),
   integration: (token: string, signal?: AbortSignal) =>
     apiRequest<OperatorIntegration>('/operator/integration', { accessToken: token, signal }),
+  wallet: (token: string, signal?: AbortSignal) =>
+    apiRequest<OperatorWalletStatus>('/operator/wallet', { accessToken: token, signal }),
+  submitWallet: (token: string, fields: { baseUrl: string; apiKey: string; password: string }) =>
+    apiRequest<OperatorWalletStatus>('/operator/wallet', { method: 'POST', accessToken: token,
+      body: { ...fields, currency: 'COIN', decimals: 0, timeoutMs: 5000 } }),
   claimKey: (token: string, password: string) =>
     apiRequest<OperatorClaimedKey>('/operator/credentials/claim', { method: 'POST', accessToken: token, body: { password } }),
   requestRotation: (token: string) =>

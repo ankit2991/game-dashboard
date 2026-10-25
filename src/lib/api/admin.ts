@@ -11,7 +11,8 @@ export interface AdminOperator { id: string; email: string; companyName: string;
   partnerId?: string | null; partnerStatus?: 'active' | 'suspended' | null;
   selectedGames?: string[]; allowedGames?: string[]; syncRequired?: boolean;
   rotationRequestedAt?: string | null; keyRotatedAt?: string | null; partnerAccessPaused?: boolean;
-  credentialClaimedAt?: string | null; gamesRequestedAt?: string | null }
+  credentialClaimedAt?: string | null; gamesRequestedAt?: string | null;
+  wallet?: { configured: boolean; status: 'not_configured' | 'pending' | 'verified' | 'failed' | 'rejected'; host: string | null; verifiedAt: string | null; failureCode: string | null } }
 export interface AdminOverview {
   generatedAt: string;
   operators: {total: number; pending: number; approved: number; rejected: number; suspended: number};
@@ -44,9 +45,9 @@ export interface AdminTransaction {transaction_id:string; partner_id:string; gam
   currency:string; status:string; created_ms:number; updated_ms:number}
 export interface AdminTransactionsPage {total:number; rows:AdminTransaction[]; sandboxOnly:true}
 export type AdminDecision = 'approve' | 'reject' | 'suspend' | 'reopen';
-export type AdminKeyAction = 'provision' | 'sync-games' | 'rotate-key' | 'suspend-key' | 'activate-key';
+export type AdminKeyAction = 'provision' | 'sync-games' | 'rotate-key' | 'suspend-key' | 'activate-key' | 'verify-wallet' | 'reject-wallet';
 export interface AdminPartner { id:string; displayName:string; allowedGames:string[]; status:'active'|'suspended'; walletConfigured:boolean }
-export interface AdminKeyActionResult { partner: AdminPartner; apiKey?:string; keyShownOnce?:true;
+export interface AdminKeyActionResult { partner?: AdminPartner; wallet?: {status: string}; apiKey?:string; keyShownOnce?:true;
   operator?:AdminOperator; note?:string }
 
 export const adminApi = {
@@ -70,7 +71,7 @@ export const adminApi = {
     apiRequest<{operators: AdminOperator[]; total: number}>('/admin/portal/operators', {accessToken, signal}),
   manageKey: (accessToken: string, id: string, action: AdminKeyAction, password?:string) => {
     if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Invalid operator ID');
-    if (['provision','rotate-key','activate-key'].includes(action) && !password) {
+    if (['provision','rotate-key','activate-key','verify-wallet','reject-wallet'].includes(action) && !password) {
       throw new Error('Administrator password is required.');
     }
     return apiRequest<AdminKeyActionResult>(`/admin/portal/operators/${id}/${action}`,

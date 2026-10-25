@@ -14,6 +14,30 @@ export const OperatorIntegration: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
+  const [walletUrl, setWalletUrl] = useState('');
+  const [walletApiKey, setWalletApiKey] = useState('');
+  const [walletPassword, setWalletPassword] = useState('');
+  const [walletBusy, setWalletBusy] = useState(false);
+  const [walletMessage, setWalletMessage] = useState('');
+  const [walletError, setWalletError] = useState('');
+  const submitWallet = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (walletBusy) return;
+    setWalletBusy(true); setWalletMessage(''); setWalletError('');
+    try {
+      const token = await getOperatorAccessToken();
+      if (!token) throw new Error('Operator session expired.');
+      const response = await operatorWorkspaceApi.submitWallet(token, {
+        baseUrl: walletUrl, apiKey: walletApiKey, password: walletPassword,
+      });
+      setWalletApiKey(''); setWalletPassword(''); setWalletUrl('');
+      setWalletMessage(`Wallet submitted: ${response.status}. Administrator balance verification required.`);
+      setRevision(value => value + 1);
+    } catch (cause) {
+      setWalletApiKey(''); setWalletPassword('');
+      setWalletError(cause instanceof Error ? cause.message : 'Wallet submission failed.');
+    } finally { setWalletBusy(false); }
+  };
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setError(''); setData(null);
@@ -53,6 +77,25 @@ export const OperatorIntegration: React.FC = () => {
           <p className="text-[#FFB547]">4. <Link to="/operator/credentials" className="underline">Securely claim or receive API key</Link> — never embed in frontend code</p>
           <p className="text-[#FFB547]">5. <Link to="/operator/docs" className="underline">Integrate on your backend</Link> — sandbox wallet E2E not yet verified</p>
         </div>
+      </Card>
+      <Card>
+        <h2 className="text-white font-semibold mb-2">B2B Sandbox Wallet Integration</h2>
+        <p className="text-[#98A5BF] text-xs mb-3">Managed separately for your Operator account. FAKE COIN only. The backend restricts wallet endpoints to administrator-allowlisted HTTPS hosts. No wallet keys are returned or stored in the browser after submission.</p>
+        <p className="text-white text-sm mb-2">Current status: <strong>{data.wallet?.status || 'not_configured'}</strong> · Host: {data.wallet?.host || 'None'}</p>
+        {data.wallet?.failureCode && <p className="text-[#FFB547] text-xs mb-2">Last check: {data.wallet.failureCode}</p>}
+        {data.wallet?.verifiedAt && <p className="text-[#20C997] text-xs mb-2">Balance verified: {new Date(data.wallet.verifiedAt).toLocaleString()}. This does not verify Bet/Win/Refund.</p>}
+        {!data.wallet?.featureEnabled ? <p className="text-[#FFB547] text-xs">B2B wallet configuration is disabled on the backend. The administrator must configure the sandbox wallet environment first.</p> :
+          <form onSubmit={event => void submitWallet(event)} className="grid gap-3 max-w-xl" autoComplete="off">
+            <label className="text-[#98A5BF] text-xs">Approved HTTPS wallet base URL
+              <input type="url" required placeholder="https://sandbox-wallet.example.org" value={walletUrl} onChange={event=>setWalletUrl(event.target.value)} className="block w-full mt-1 p-2 rounded-lg bg-[#0B1020] border border-[#233252] text-white"/></label>
+            <label className="text-[#98A5BF] text-xs">Wallet callback API key (secret)
+              <input type="password" required minLength={32} maxLength={256} autoComplete="off" value={walletApiKey} onChange={event=>setWalletApiKey(event.target.value)} className="block w-full mt-1 p-2 rounded-lg bg-[#0B1020] border border-[#233252] text-white"/></label>
+            <label className="text-[#98A5BF] text-xs">Confirm Operator password
+              <input type="password" required autoComplete="current-password" value={walletPassword} onChange={event=>setWalletPassword(event.target.value)} className="block w-full mt-1 p-2 rounded-lg bg-[#0B1020] border border-[#233252] text-white"/></label>
+            <Button variant="primary" type="submit" isLoading={walletBusy} disabled={walletBusy}>Submit for Admin Balance Check</Button>
+          </form>}
+        {walletError && <p role="alert" className="text-[#FF5D73] text-xs mt-2">{walletError}</p>}
+        {walletMessage && <p role="status" className="text-[#20C997] text-xs mt-2">{walletMessage}</p>}
       </Card>
       <Card><div className="flex items-center gap-2 text-[#FFB547] text-sm mb-3"><AlertTriangle className="w-4 h-4"/>Wallet and real end-to-end launch are NOT verified or enabled by this status.</div>
         <h2 className="text-white font-semibold mb-3">Game authorization status</h2>

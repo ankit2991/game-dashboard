@@ -1,3 +1,5 @@
+> **Patch 31:** Operator Integration Setup now includes B2B Sandbox Wallet setup; Admin API Key Management reviews read-only balance verification. Backend opt-in and a real sandbox callback wallet are required. See `BE/docs/PATCH31_B2B_SANDBOX_WALLETS.md` in the cumulative ZIP.
+
 **Maintenance Patch 5 (2026-10-25 — provider ledger display):** `/player/wallet` and `/player/transactions` now recognize zero-value `loss` entries for bot bookkeeping, including the `loss` operation filter, without changing balances. This is separate from the historical Dashboard Integration Patch 5 (leaderboards). See `../BE/docs/PATCH5_PLAYER_TRANSACTION_LEDGER.md` in the combined archive; run `npm run test:patch5`.
 
 **Current baseline: Patch 21 (cumulative).** Deployment and acceptance instructions: [PATCH_21_RELEASE_VALIDATION.md](PATCH_21_RELEASE_VALIDATION.md). Earlier patch headings below describe historical work; do not treat their provisional statements as the current status.
