@@ -46,3 +46,10 @@ export function validateLaunchResponse(raw: BrowserGameLaunch, expectedGameId: s
   return raw;
 }
 
+
+/** A handoff near expiry should never be opened; it may expire during cold start. */
+export function isLaunchTicketFresh(launch: BrowserGameLaunch, now = Date.now(), minLifetimeMs = 10_000): boolean {
+  if (launch.mode === 'demo') return true;
+  const expiresMs = Date.parse(launch.expiresAt || '');
+  return Number.isFinite(expiresMs) && expiresMs - now > minLifetimeMs;
+}

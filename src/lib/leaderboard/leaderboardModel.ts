@@ -1,18 +1,19 @@
-/** The Provider leaderboard contains pseudonymous operator-scoped identities, not B2C usernames. */
+/** Pseudonymous operator-scoped player rankings from verified COIN payouts. */
 export interface LeaderboardEntry {
   rank: number;
   player: { label: string };
-  wins: number;
-  draws: number;
-  rounds: number;
-  bestScore: number;
-  totalScore: number;
+  winningRounds: number;
+  bestPayoutMinor: number;
+  totalPayoutMinor: number;
 }
 
 export interface LeaderboardListing {
   scope: 'global' | 'game';
   gameId: string | null;
-  sort: 'wins' | 'best_score';
+  sort: 'best_payout_minor';
+  currency: 'COIN';
+  decimals: 0;
+  source: 'confirmed_wallet_ledger';
   limit: number;
   offset: number;
   totalPlayers: number;
@@ -26,10 +27,11 @@ export function validateLeaderboardListing(value: unknown, expectedGameId: strin
   if (!value || typeof value !== 'object') throw new Error('Invalid leaderboard response.');
   const list = value as LeaderboardListing;
   if (list.scope !== (expectedGameId ? 'game' : 'global') ||
-      list.gameId !== expectedGameId ||
-      list.sort !== (expectedGameId ? 'best_score' : 'wins') ||
+      list.gameId !== expectedGameId || list.sort !== 'best_payout_minor' ||
+      list.currency !== 'COIN' || list.decimals !== 0 || list.source !== 'confirmed_wallet_ledger' ||
       list.offset !== offset || list.limit !== PAGE_SIZE ||
-      !nonnegative(list.totalPlayers) || !Array.isArray(list.entries) || list.entries.length > PAGE_SIZE) {
+      !nonnegative(list.totalPlayers) || !Array.isArray(list.entries) || list.entries.length > PAGE_SIZE ||
+      (list.entries.length > 0 && offset + list.entries.length > list.totalPlayers)) {
     throw new Error('Invalid leaderboard metadata.');
   }
   for (let i = 0; i < list.entries.length; i += 1) {
@@ -37,8 +39,10 @@ export function validateLeaderboardListing(value: unknown, expectedGameId: strin
     if (!entry || entry.rank !== offset + i + 1 ||
         !entry.player || typeof entry.player.label !== 'string' ||
         !/^Player-[a-f0-9]{10}$/.test(entry.player.label) ||
-        ![entry.wins, entry.draws, entry.rounds, entry.bestScore, entry.totalScore].every(nonnegative) ||
-        entry.wins + entry.draws > entry.rounds) {
+        ![entry.winningRounds, entry.bestPayoutMinor, entry.totalPayoutMinor].every(nonnegative) ||
+        entry.winningRounds < 1 || entry.bestPayoutMinor < 1 ||
+        entry.totalPayoutMinor < entry.bestPayoutMinor ||
+        Object.keys(entry).some(k => !['rank','player','winningRounds','bestPayoutMinor','totalPayoutMinor'].includes(k))) {
       throw new Error('Invalid leaderboard entry.');
     }
   }

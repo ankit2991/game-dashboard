@@ -104,9 +104,13 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
             ? 'Player accounts are unavailable on this backend. Check B2C_AUTH_ENABLED and the deployed API URL.'
             : path.startsWith('/leaderboards/')
               ? 'Leaderboard is unavailable on this backend. Check LEADERBOARD_ENABLED and the deployed API URL.'
-              : path.startsWith('/operator/')
-                ? 'Operator accounts are unavailable on this backend. Check B2B_OPERATOR_AUTH_ENABLED and the deployed API URL.'
-                : path.startsWith('/admin/')
+              : path === '/player/launch-options' || path === '/player/launch'
+                ? 'Game launch API is missing from the deployed backend. Verify the Render deployment version and VITE_API_BASE_URL.'
+                : path === '/player/wallet' || path === '/player/transactions'
+                  ? 'Player wallet API is unavailable. Verify the Render deployment version, player authentication and sandbox wallet-read settings.'
+                  : path.startsWith('/operator/')
+                    ? 'Operator accounts are unavailable on this backend. Check B2B_OPERATOR_AUTH_ENABLED and the deployed API URL.'
+                    : path.startsWith('/admin/')
                   ? 'Admin access is unavailable on this backend. Check SUPER_ADMIN_ENABLED and the deployed API URL.'
                   : null)
         : null;

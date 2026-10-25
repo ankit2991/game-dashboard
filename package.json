@@ -12,7 +12,10 @@
     "netlify:fix": "node tools/patch14-ensure-netlify-redirects.mjs",
     "test:patch1": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs",
     "test:patch2": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs tests/patch2-launch-contract.test.mjs",
-    "test:patch3": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs tests/patch2-launch-contract.test.mjs tests/patch2-3-header-binding.test.mjs"
+    "test:patch3": "node --experimental-strip-types --test tests/patch1-wallet-contract.test.mjs tests/patch2-launch-contract.test.mjs tests/patch2-3-header-binding.test.mjs",
+    "test:patch5": "node --experimental-strip-types --test tests/patch5-ledger-loss-contract.test.mjs tests/patch6-wallet.test.mjs",
+    "test:patch6": "node --experimental-strip-types --test tests/patch6-money-leaderboard.test.mjs",
+    "test:patch7": "node --test tests/patch14-netlify.test.mjs tests/patch14-redirects-build.test.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",

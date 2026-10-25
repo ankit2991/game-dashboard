@@ -12,7 +12,7 @@ export interface WalletOverview {
   transactionHistoryAvailable: boolean;
   configurationBlockers?: string[];
 }
-export type WalletOperation = 'bet' | 'win' | 'refund';
+export type WalletOperation = 'bet' | 'win' | 'refund' | 'loss';
 export type WalletTransactionStatus = 'succeeded' | 'rejected' | 'inflight' | 'indeterminate';
 export interface PlayerWalletTransaction {
   transactionId: string;
@@ -39,7 +39,7 @@ export const DEFAULT_TRANSACTION_FILTERS: TransactionFilters = { operation: 'all
 
 export function transactionQuery(offset: number, filters: TransactionFilters = DEFAULT_TRANSACTION_FILTERS) {
   const page = transactionPaging(offset);
-  if (!['all', 'bet', 'win', 'refund'].includes(filters.operation) ||
+  if (!['all', 'bet', 'win', 'refund', 'loss'].includes(filters.operation) ||
       !['all', 'succeeded', 'rejected', 'inflight', 'indeterminate'].includes(filters.status)) {
     throw new Error('Invalid transaction filters');
   }
@@ -69,6 +69,18 @@ export function amountLabel(amountMinor: number, currency: string) {
   if (!Number.isSafeInteger(amountMinor) || amountMinor < 0 || !/^[A-Z0-9]{3,8}$/.test(currency)) return 'Unavailable';
   return `${amountMinor.toLocaleString('en-US')} ${currency} (minor units)`;
 }
+/** A bot-loss is a zero-value ledger record, NOT a debit from the player's wallet. */
+export function transactionOperationLabel(operation: WalletOperation): string {
+  return operation === 'loss' ? 'Bot loss (record only)' : operation;
+}
+
+/** Preserve stored minor units; never infer wallet deltas from transaction history. */
+export function transactionAmountLabel(transaction: Pick<PlayerWalletTransaction, 'operation' | 'amountMinor' | 'currency'>): string {
+  const label = amountLabel(transaction.amountMinor, transaction.currency);
+  return transaction.operation === 'loss' && transaction.amountMinor === 0
+    ? `${label} · no wallet movement` : label;
+}
+
 export function validateWalletOverview(data: WalletOverview): WalletOverview {
   if (!data || data.mode !== 'sandbox_only' || typeof data.configured !== 'boolean' ||
       !['unavailable', 'verified'].includes(data.balanceStatus) ||
@@ -96,9 +108,9 @@ export function validateTransactionPage(data: PlayerTransactionPage, offset: num
   for (const row of data.transactions) {
     if (!row || typeof row.transactionId !== 'string' || !/^[A-Za-z0-9_.:-]{8,128}$/.test(row.transactionId) ||
         typeof row.gameId !== 'string' || !/^[a-z0-9-]{2,64}$/.test(row.gameId) ||
-        !['bet', 'win', 'refund'].includes(row.operation) ||
+        !['bet', 'win', 'refund', 'loss'].includes(row.operation) ||
         !['succeeded', 'rejected', 'inflight', 'indeterminate'].includes(row.status) ||
-        !Number.isSafeInteger(row.amountMinor) || row.amountMinor <= 0 ||
+        (!Number.isSafeInteger(row.amountMinor) || (row.operation === 'loss' ? row.amountMinor !== 0 : row.amountMinor <= 0)) ||
         typeof row.currency !== 'string' || !/^[A-Z0-9]{3,8}$/.test(row.currency) ||
         !Number.isFinite(Date.parse(row.createdAt)) || !Number.isFinite(Date.parse(row.updatedAt)) ||
         (filters.operation !== 'all' && row.operation !== filters.operation) ||

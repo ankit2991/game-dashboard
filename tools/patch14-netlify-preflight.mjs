@@ -1,3 +1,6 @@
 import { readFileSync } from 'node:fs';
-if (!readFileSync('dist/_redirects','utf8').includes('/* /index.html 200')) process.exit(1);
+const rule = readFileSync('dist/_redirects', 'utf8');
+if (!rule.split(/\r?\n/).some(line => /^\/\*\s+\/index\.html\s+200(?:\s+.*)?$/.test(line.trim()))) {
+  throw new Error('Netlify SPA redirect missing from dist');
+}
 console.log('Netlify SPA redirect present.');

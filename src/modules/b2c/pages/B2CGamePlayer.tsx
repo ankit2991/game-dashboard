@@ -6,6 +6,7 @@ import { CatalogStatus } from '../../../components/catalog/CatalogStatus';
 import { useProviderCatalog } from '../../../lib/catalog/useProviderCatalog';
 import { getCatalogArtwork, getSafeDemoUrl } from '../../../lib/catalog/catalogModel';
 import { launchApi, validateLaunchResponse, type BrowserGameLaunch, type LaunchMode } from '../../../lib/api/launch';
+import { isLaunchTicketFresh } from '../../../lib/launch/launchModel';
 import type { LaunchCapabilitiesResponse } from '../../../lib/launch/capabilitiesModel';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -25,6 +26,7 @@ export const B2CGamePlayer: React.FC = () => {
   const [pending, setPending] = useState<LaunchMode | null>(null);
   const [launch, setLaunch] = useState<BrowserGameLaunch | null>(null);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const [launchTime, setLaunchTime] = useState(Date.now());
   const [failedMode, setFailedMode] = useState<LaunchMode>('demo');
   const request = useRef<AbortController | null>(null);
   const alive = useRef(true);
@@ -48,6 +50,15 @@ export const B2CGamePlayer: React.FC = () => {
       .finally(() => { if (!controller.signal.aborted) setCapabilityLoading(false); });
     return () => controller.abort();
   }, [id]);
+
+  // Never leave an expired link clickable: render a fresh-ticket action instead.
+  useEffect(() => {
+    if (!launch || launch.mode !== 'provider' || !launch.expiresAt) return;
+    setLaunchTime(Date.now());
+    const remaining = Date.parse(launch.expiresAt) - Date.now() - 10_000;
+    const timer = window.setTimeout(() => setLaunchTime(Date.now()), Math.max(0, remaining));
+    return () => window.clearTimeout(timer);
+  }, [launch]);
 
   const startGame = async (mode: LaunchMode) => {
     if (!game || pending || (mode === 'provider' && !providerConfigured)) return;
@@ -78,6 +89,8 @@ export const B2CGamePlayer: React.FC = () => {
       if (alive.current && !controller.signal.aborted) setPending(null);
     }
   };
+
+  const launchFresh = launch ? isLaunchTicketFresh(launch, launchTime) : false;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-5 min-h-[55vh]">
@@ -111,7 +124,13 @@ export const B2CGamePlayer: React.FC = () => {
             <p className="text-white font-semibold">{launch.mode === 'demo' ? 'Demo is ready' : 'Sandbox launch ticket created'}</p>
             <p className="text-[#98A5BF] text-xs">{launch.mode === 'demo' ? 'Opens the separately hosted demo with no real-money wallet.' : 'Open the game before the one-time ticket expires. the game backend must accept it before a wallet session exists; a ticket alone does not prove that the game is integrated.'}</p>
             {launch.mode === 'provider' && launch.expiresAt && <p className="text-[#98A5BF] text-xs">Ticket expires: {new Date(launch.expiresAt).toLocaleString()}</p>}
-            <a href={launch.launchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex gap-2 items-center px-5 py-3 rounded-xl bg-[#00D4FF] text-[#091526] font-bold text-sm">Open {launch.mode === 'demo' ? 'demo' : 'sandbox game'} <ArrowUpRight className="w-4 h-4"/></a>
+            {launchFresh ? <button type="button" onClick={() => {
+              // Check again at the actual click, not merely at render time.
+              if (!isLaunchTicketFresh(launch)) { setLaunchTime(Date.now()); return; }
+              const url = validateLaunchResponse(launch, game.gameId, launch.mode, game.demoUrl).launchUrl;
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }} className="inline-flex gap-2 items-center px-5 py-3 rounded-xl bg-[#00D4FF] text-[#091526] font-bold text-sm">Open {launch.mode === 'demo' ? 'demo' : 'sandbox game'} <ArrowUpRight className="w-4 h-4"/></button>
+              : <div role="alert" className="space-y-2"><p className="text-amber-300 text-sm">Your launch ticket has expired. Generate a new one before opening the game.</p><button type="button" disabled={!!pending} onClick={() => void startGame('provider')} className="inline-flex items-center px-5 py-3 rounded-xl bg-[#00D4FF] text-[#091526] font-bold text-sm disabled:opacity-60">Generate fresh launch ticket</button></div>}
           </div>}
         </div>
       </div>}

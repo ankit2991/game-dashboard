@@ -1,3 +1,5 @@
+**Maintenance Patch 5 (2026-10-25 — provider ledger display):** `/player/wallet` and `/player/transactions` now recognize zero-value `loss` entries for bot bookkeeping, including the `loss` operation filter, without changing balances. This is separate from the historical Dashboard Integration Patch 5 (leaderboards). See `../BE/docs/PATCH5_PLAYER_TRANSACTION_LEDGER.md` in the combined archive; run `npm run test:patch5`.
+
 **Current baseline: Patch 21 (cumulative).** Deployment and acceptance instructions: [PATCH_21_RELEASE_VALIDATION.md](PATCH_21_RELEASE_VALIDATION.md). Earlier patch headings below describe historical work; do not treat their provisional statements as the current status.
 
 > **Live Netlify instructions (Patch 14):** See [`PATCH_14_NETLIFY_RENDER_GUIDE.md`](PATCH_14_NETLIFY_RENDER_GUIDE.md). Upload the built `dist/`, not the full integration ZIP.
@@ -74,3 +76,8 @@ The Admin Dashboard, Analytics, Game Catalog Management, Settings and main Admin
 ## Patch 12 — Release / FREE-tier deployment
 
 Use [PATCH_12_FINAL_RELEASE_GUIDE.md](PATCH_12_FINAL_RELEASE_GUIDE.md) for local integration, Render Free, Atlas M0 Free, Vercel, environment variables, and the read-only post-deployment smoke. Deep-link refreshes use `vercel.json`; production requires explicit `VITE_API_BASE_URL`. Do not treat a passing mock HTTP integration suite as proof of a live deployed Provider wallet.
+
+
+## Patch 6 — COIN Money Leaderboard
+
+The B2C leaderboard displays the largest confirmed COIN payout per player, and total confirmed payouts, not game scores. This display requires the Patch 6 Game Provider API. Run `npm run test:patch6`; see `BE/docs/PATCH6_MONEY_LEADERBOARD.md` in the full patch ZIP.

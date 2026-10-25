@@ -4,7 +4,7 @@ import { Wallet, ShieldCheck, ArrowLeftRight, RefreshCw, Info } from 'lucide-rea
 import { Card, CardHeader } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { usePlayerWallet, usePlayerTransactions } from '../../../lib/wallet/usePlayerWallet';
-import { amountLabel } from '../../../lib/wallet/walletModel';
+import { transactionAmountLabel, transactionOperationLabel } from '../../../lib/wallet/walletModel';
 import { connectionHint } from '../../../lib/launch/connectionLabels';
 
 export const PlayerWallet: React.FC = () => {
@@ -47,14 +47,14 @@ export const PlayerWallet: React.FC = () => {
         This provider does not expose a player cashier API. No fake deposit or withdrawal buttons or simulated successful settlements are offered.
       </div>
     </Card>
-    <Card><CardHeader title="Recent provider activity" subtitle="Only server-verified ledger entries tied to your B2C account" action={<Link to="/player/transactions" className="text-[#00D4FF] text-xs">View history →</Link>} />
+    <Card><CardHeader title="Recent provider activity" subtitle="Server-owned ledger entries tied to your B2C account; bot losses have no wallet movement" action={<Link to="/player/transactions" className="text-[#00D4FF] text-xs">View history →</Link>} />
       {activity.loading ? <p role="status" className="text-sm text-[#98A5BF]">Loading transactions…</p>
         : activity.error ? <p role="alert" className="text-sm text-[#FFB547]">{activity.error}</p>
         : !activity.page?.configured ? <p className="text-sm text-[#98A5BF]">B2C provider operator is not configured yet.</p>
         : !activity.page.transactions.length ? <p className="text-sm text-[#98A5BF]">No provider wallet transactions recorded for this account.</p>
         : <div className="space-y-2">{activity.page.transactions.slice(0, 5).map(tx => <div key={tx.transactionId} className="flex justify-between items-center p-3 rounded-xl bg-[#121A2D] border border-[#233252] gap-3 text-xs">
-          <div className="flex items-center gap-2 min-w-0"><ArrowLeftRight className="w-4 h-4 shrink-0 text-[#00D4FF]" /><span className="text-white truncate">{tx.gameId} · {tx.operation} · {tx.status}</span></div>
-          <span className="font-mono text-[#98A5BF] shrink-0">{amountLabel(tx.amountMinor, tx.currency)}</span>
+          <div className="flex items-center gap-2 min-w-0"><ArrowLeftRight className="w-4 h-4 shrink-0 text-[#00D4FF]" /><span className="text-white truncate">{tx.gameId} · {transactionOperationLabel(tx.operation)} · {tx.status}</span></div>
+          <span className="font-mono text-[#98A5BF] shrink-0">{transactionAmountLabel(tx)}</span>
         </div>)}</div>}
     </Card>
     <div className="flex items-start gap-2 text-xs text-[#98A5BF]"><Info className="w-4 h-4 shrink-0" /> Demo games run outside the provider ledger; their local balances and gameplay do not appear here.</div>
