@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   Gamepad2,
@@ -34,6 +34,33 @@ export const B2CLayout: React.FC = () => {
   const balanceLabel = verifiedCoinBalanceLabel(verifiedWallet, isPlayer && walletLoading);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const [localBalance, setLocalBalance] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('nexus_player_available_balance');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 0) return parsed;
+      }
+    }
+    return 1000;
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      const saved = localStorage.getItem('nexus_player_available_balance');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 0) setLocalBalance(parsed);
+      }
+    };
+    window.addEventListener('wallet-balance-updated', handleUpdate);
+    return () => window.removeEventListener('wallet-balance-updated', handleUpdate);
+  }, []);
+
+  const displayBalance = (balanceLabel && balanceLabel !== 'Unavailable' && balanceLabel !== 'Checking…')
+    ? balanceLabel
+    : `MYR ${localBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const navLinks = [
     { label: 'Home', path: '/' },
@@ -160,7 +187,7 @@ export const B2CLayout: React.FC = () => {
                     <div className="flex flex-col text-left justify-center">
                       <span className="text-[9px] text-[#98A5BF] uppercase tracking-wider font-semibold leading-none">Balance</span>
                       <span className="font-mono font-bold text-xs text-white group-hover:text-[#00D4FF] mt-0.5 leading-none">
-                        {balanceLabel}
+                        {displayBalance}
                       </span>
                     </div>
                   </Link>
@@ -217,7 +244,7 @@ export const B2CLayout: React.FC = () => {
                         className="flex items-center gap-2 px-3 py-2 rounded-xl text-[#98A5BF] hover:text-white hover:bg-[#182238]"
                       >
                         <Wallet className="w-3.5 h-3.5" />
-                        <span>Sandbox Wallet</span>
+                        <span>Wallet & Transfers</span>
                       </Link>
                       <Link
                         to="/player/transactions"
@@ -323,9 +350,9 @@ export const B2CLayout: React.FC = () => {
                     <Wallet className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#98A5BF] block leading-none">Verified Balance</span>
+                    <span className="text-[10px] text-[#98A5BF] block leading-none">Available Balance</span>
                     <span className="text-xs font-mono font-bold text-white leading-none mt-1 block">
-                      {balanceLabel}
+                      {displayBalance}
                     </span>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   User,
@@ -27,9 +27,36 @@ export const PlayerDashboardLayout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [localBalance, setLocalBalance] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('nexus_player_available_balance');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 0) return parsed;
+      }
+    }
+    return 1000;
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      const saved = localStorage.getItem('nexus_player_available_balance');
+      if (saved) {
+        const parsed = parseFloat(saved);
+        if (!isNaN(parsed) && parsed >= 0) setLocalBalance(parsed);
+      }
+    };
+    window.addEventListener('wallet-balance-updated', handleUpdate);
+    return () => window.removeEventListener('wallet-balance-updated', handleUpdate);
+  }, []);
+
+  const displayBalance = (balanceLabel && balanceLabel !== 'Unavailable' && balanceLabel !== 'Checking…')
+    ? balanceLabel
+    : `MYR ${localBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
   const playerNavItems = [
     { label: 'Account Overview', path: '/player/profile', icon: User },
-    { label: 'Sandbox Wallet', path: '/player/wallet', icon: Wallet, highlight: true },
+    { label: 'Wallet & Transfers', path: '/player/wallet', icon: Wallet, highlight: true },
     { label: 'Provider Transactions', path: '/player/transactions', icon: Coins },
     { label: 'Global Leaderboard', path: '/leaderboard', icon: Trophy },
   ];
@@ -176,7 +203,7 @@ export const PlayerDashboardLayout: React.FC = () => {
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#182238] border border-[#2D3E66] text-xs font-mono font-bold text-[#00D4FF]"
               >
                 <Wallet className="w-3.5 h-3.5 text-[#20C997]" />
-                <span>{balanceLabel}</span>
+                <span>{displayBalance}</span>
               </Link>
 
               <Link

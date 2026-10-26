@@ -104,7 +104,7 @@ export interface ApiKey {
   rateLimitPerMin: number;
 }
 
-export type TransactionType = 'deposit' | 'withdrawal' | 'bet' | 'win' | 'refund' | 'operator_settlement';
+export type TransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'advance' | 'bet' | 'win' | 'refund' | 'operator_settlement';
 export type TransactionStatus = 'completed' | 'pending' | 'failed' | 'processing';
 
 export interface Transaction {
